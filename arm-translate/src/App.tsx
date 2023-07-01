@@ -1,25 +1,30 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { BodyStyled, MainStyled, SectionStyled, SubTitleStyled, TitleStyled } from './App.style';
 
 function App() {
+  const [used, setUsed] = React.useState('')
+  const architecture: string[] = ['A32', 'A64', 'T16']
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <MainStyled>
+      <header>
+        <TitleStyled>Tradutor ARM</TitleStyled>
       </header>
-    </div>
+      <BodyStyled>
+        <SectionStyled>
+          <SubTitleStyled>Instruções a Traduzir: </SubTitleStyled>
+          <select onChange={(arch) => setUsed(arch.target.value)}>
+            {architecture.map((arch) => (
+              <option>{arch}</option>
+            ))}
+          </select>
+        </SectionStyled>
+        <SectionStyled>
+          <SubTitleStyled>{architecture[0] !== used ? architecture[0] : architecture[1]}</SubTitleStyled>
+          <SubTitleStyled>{architecture[2] !== used ? architecture[2] : architecture[1]}</SubTitleStyled>
+        </SectionStyled>
+      </BodyStyled>
+    </MainStyled>
   );
 }
 
