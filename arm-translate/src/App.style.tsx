@@ -23,3 +23,18 @@ export const SubTitleStyled = styled.h2`
 export const SectionStyled = styled.div`
     width: 50rem;
 `;
+export const SelectionStyled = styled.select`
+    margin: 16px;
+    display: flex;
+    flex-direction: column;
+`;
+
+export const InputStyled = styled.textarea`
+    background-color: #eee;
+    margin: 16px;
+    width: 35rem;
+    height: 30rem;
+    padding: 4px;
+    text-align: left;
+    vertical-align: top;
+`;
