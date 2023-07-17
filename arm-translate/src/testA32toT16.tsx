@@ -1,11 +1,12 @@
 let vectorT16 = ["ADD", "SUB", "MOV", "B", "BL", "UND"]
-let matrixA32 = [["ADD", "SUB", "MOV", "B", "BL", "AND", "RSB", "SWI"], 
-                 [0, 1, 2, 3, 4, 5, 5, 5]]
+let matrixA32 = [["ADD", "SUB", "MOV", "B", "BL", "BLEQ", "AND", "RSB", "SWI"], 
+                 [0, 1, 2, 3, 4, 4, 5, 5, 5]]
+let vectorCond = ["EQ", "NE", "CS", "HS", "CC", "LO", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE", "AL", "S"]
 
 const ArmToThumb = (inst:string) => {
     let vectorInst = inst.split(' ')
 
-    let opcodeT16 = GetOpcodeT16(vectorInst[0].slice(0, 3)) // talvez não funcione para Branches condicionais e. g. BLEQ (branch and link if equal)
+    let opcodeT16 = GetOpcodeT16(vectorInst[0])
 
     switch ( opcodeT16 ) {
         case "MOV":
@@ -25,7 +26,22 @@ const ArmToThumb = (inst:string) => {
     return "UEPA"
 }
 
+const simplifyOpcodeA32 = (opcodeA32:string) => {
+    let auxSliced = opcodeA32.slice(0, 3)
+    let auxExtra = opcodeA32.slice(3)
+
+    if(matrixA32[0].some(x => x === auxSliced) && vectorCond.some(x => x === auxExtra)){
+        return auxSliced
+    }
+
+    return opcodeA32
+
+}
+
 const GetOpcodeT16 = (opcodeA32:string) => {
+
+    opcodeA32 = simplifyOpcodeA32(opcodeA32)
+
     let instPos = matrixA32[0].findIndex(x => x === opcodeA32)
 
     if(instPos >= 0){
@@ -44,8 +60,10 @@ const verifyMOV = (vectorInst:string[]) => {
     return "MOV"
 }
 
-let teste1 = ArmToThumb("ADDLE R0, R0, #2")
-let teste2 = ArmToThumb("MOV R1, R1, LSL #Offset5")
-let teste3 = ArmToThumb("BL R7")
+let teste1 = ArmToThumb("ADDS R0, R0, #2")
+let teste2 = ArmToThumb("MOVLE R1, R1, LSL #Offset5")
+let teste3 = ArmToThumb("BLEQ R7")
 
 console.log(teste1 + "\n" + teste2 + "\n" + teste3)
+
+// TAMANHO DE REGISTRADORES (Hi e Lo)
