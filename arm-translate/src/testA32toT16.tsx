@@ -1,24 +1,30 @@
 let vectorT16 = ["ADD", "SUB", "MOV", "B", "BL", "UND"]
-let matrixA32 = [["ADD", "SUB", "MOV", "B", "BL", "BLEQ", "AND", "RSB", "SWI"], 
-                 [0, 1, 2, 3, 4, 4, 5, 5, 5]]
+let matrixA32 = [["ADD", "SUB", "MOV", "B", "BL", "AND", "RSB", "SWI"],
+[0, 1, 2, 3, 4, 5, 5, 5]]
 let vectorCond = ["EQ", "NE", "CS", "HS", "CC", "LO", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE", "AL", "S"]
 
-const ArmToThumb = (inst:string) => {
+
+
+const ArmToThumb = (inst: string) => {
     let vectorInst = inst.split(' ')
 
     let opcodeT16 = GetOpcodeT16(vectorInst[0])
 
-    switch ( opcodeT16 ) {
+    switch (opcodeT16) {
         case "MOV":
             opcodeT16 = verifyMOV(vectorInst);
             vectorInst.splice(3, 1)
             inst = vectorInst.toString().replace(/,,/g, ', ').replace(/,/, ' ')
             break;
-        default: 
+        case "B":
             break;
-     }
+        case "BL":
+            break;
+        default:
+            break;
+    }
 
-    if(opcodeT16 != "UEPA"){
+    if (opcodeT16 != "UEPA") {
         let operandsT16 = inst.slice(vectorInst[0].length)
         return opcodeT16 + operandsT16;
     }
@@ -26,34 +32,34 @@ const ArmToThumb = (inst:string) => {
     return "UEPA"
 }
 
-const simplifyOpcodeA32 = (opcodeA32:string) => {
-    let auxSliced = opcodeA32.slice(0, 3)
-    let auxExtra = opcodeA32.slice(3)
+const simplifyOpcodeA32 = (opcodeA32: string) => {
+    for (let i = 1; i < 6; i++) {
+        let auxSliced = opcodeA32.slice(0, i)
+        let auxExtra = opcodeA32.slice(i)
 
-    if(matrixA32[0].some(x => x === auxSliced) && vectorCond.some(x => x === auxExtra)){
-        return auxSliced
+        if (matrixA32[0].some(x => x === auxSliced) && vectorCond.some(x => x === auxExtra)) {
+            return auxSliced
+        }
     }
 
-    return opcodeA32
+    return "XABU"
 
 }
 
-const GetOpcodeT16 = (opcodeA32:string) => {
-
-    opcodeA32 = simplifyOpcodeA32(opcodeA32)
-
+const GetOpcodeT16 = (opcodeA32: string) => {
+    opcodeA32 = simplifyOpcodeA32(opcodeA32);
     let instPos = matrixA32[0].findIndex(x => x === opcodeA32)
 
-    if(instPos >= 0){
+    if (instPos >= 0) {
         return vectorT16[Number(matrixA32[1][instPos])]
     }
 
     return "UEPA"
 }
 
-const verifyMOV = (vectorInst:string[]) => {
+const verifyMOV = (vectorInst: string[]) => {
 
-    if(vectorInst.length > 3){
+    if (vectorInst.length > 3) {
         return vectorInst[3]
     }
 
