@@ -1,7 +1,7 @@
 let vectorT16 = ["UND", "ADC", "ADD", "AND", "B", "BIC", "BL", "BX", "CMN", "CMP", "EOR", "LDMIA", "LDR", "LDRB", "LDRH", "LDSB", "LDSH", "MOV", "MUL", "MVN", "NEG", "ORR", "POP", "PUSH", "SBC", "STMIA", "STR", "STRB", "STRH", "SWI", "SUB", "TST"]
 let matrixA32 = [["ADC", "ADD", "AND", "B", "BIC", "BL", "BX", "CDP", "CMN", "CMP", "EOR", "LDC", "LDM", "LDR", "LDRB", "LDRH", "LDRSB", "LDRSH", "MCR", "MLA", "MOV", "MRC", "MRS", "MSR", "MUL", "MVN", "ORR", "RSB", "RSC", "SBC", "STC", "STM", "STR", "STRB", "STRH", "SUB", "SWI", "SWP", "TEQ", "TST"],
 [1, 2, 3, 4, 5, 6, 7, 0, 8, 9, 10, 0, 11, 12, 13, 14, 15, 16, 0, 18, 17, 0, 0, 0, 18, 19, 21, 20, 0, 24, 0, 25, 26, 27, 28, 30, 29, 0, 0, 31]]
-let vectorCond = ["EQ", "NE", "CS", "HS", "CC", "LO", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE", "AL", ""]
+let vectorCond = ["EQ", "NE", "CS", "CC", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE", "AL", ""]
 let vectorAddr = ["ED", "FD", "EA", "FA", "IB", "IA", "DB", "DA"];
 
 
@@ -76,7 +76,7 @@ const verifyMOV = (vectorInst: string[]) => {
 }
 
 const verifyB = (opcode: string) => {
-    if (opcode.length > 1) {
+    if (opcode.length > 1 && !opcode.includes("AL")) {
         return opcode;
     }
     return "B"
@@ -108,7 +108,7 @@ const verifyNEG = (instr: string[]) => {
 
 let teste1 = ArmToThumb("RSBS R0, R1, #0")
 let teste2 = ArmToThumb("RSBEQS R1, R2, R3")
-let teste3 = ArmToThumb("BLEQ R7")
+let teste3 = ArmToThumb("BAL R7")
 let teste4 = ArmToThumb("STMDB R13!, {R1, R2}")
 
 console.log(teste1 + "\n" + teste2 + "\n" + teste3 + "\n" + teste4)
