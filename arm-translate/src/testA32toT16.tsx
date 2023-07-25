@@ -10,18 +10,100 @@ const ArmToThumb = (inst: string) => {
     let vectorInst = inst.split(' ')
 
     let opcodeT16 = GetOpcodeT16(vectorInst[0])
+    let operandsT16 = inst.slice(vectorInst[0].length)
+    let lastOperand = vectorInst[vectorInst.length - 1]
 
     switch (opcodeT16) {
-        case "MOV":
-            opcodeT16 = verifyMOV(vectorInst)
-            vectorInst.splice(3, 1)
-            inst = vectorInst.toString().replace(/,,/g, ', ').replace(/,/, ' ')
+        case "ADC":
+            if(vectorInst[1] != vectorInst[2]){
+                return "ERRO: Formato não suportado (Rd := Rn + Rs + C-bit) / Formato esperado: Rd := Rd + Rs + C-bit"
+            }
+            operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3]
+            break;
+        case "ADD": // FALTA
+            // Se tiver offset
+            if(lastOperand.includes("#")){
+                // Se offset tiver até 3 bits, mantém operandos
+                // Se offset tiver mais que 3 e até 8 bits:
+                if(parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 7 && parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) <= 255){
+                    if(vectorInst[1] != vectorInst[2]){
+                        return "ERRO: Formato não suportado (Rd := Rn + offset8) / Formato esperado: Rd := Rd + offset8"
+                    }
+                    operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3]
+                }
+            }
+            break;
+        case "AND":
+            if(vectorInst[1] != vectorInst[2]){
+                return "ERRO: Formato não suportado (Rd := Rn AND Rs) / Formato esperado: Rd := Rd AND Rs"
+            }
+            operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3]
             break;
         case "B":
             opcodeT16 = verifyB(vectorInst[0])
             break;
-        case "LDMIA":
+        case "BIC":
+            if(vectorInst[1] != vectorInst[2]){
+                return "ERRO: Formato não suportado (Rd := Rn AND NOT Rs) / Formato esperado: Rd := Rd AND NOT Rs"
+            }
+            operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3]
+            break;
+        case "BL":
+            break;
+        case "BX":
+            break;
+        case "CMN":
+            break;
+        case "CMP":
+            break;
+        case "EOR":
+            if(vectorInst[1] != vectorInst[2]){
+                return "ERRO: Formato não suportado (Rd := Rn EOR Rs) / Formato esperado: Rd := Rd EOR Rs"
+            }
+            operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3]
+            break;
+        case "LDMIA": // e POP
             opcodeT16 = verifyPOP(vectorInst[1]);
+            if(opcodeT16 == "POP"){
+                operandsT16 = ' ' + inst.slice(inst.indexOf("{"))
+            }
+            break;
+        case "LDR":
+            break;
+        case "LDRB":
+            break;
+        case "LDRH":
+            break;
+        case "LDSB":
+            break;
+        case "LDSH":
+            break;
+        case "MOV": // e ASR, LSL, LSR e ROR
+            opcodeT16 = verifyMOV(vectorInst)
+            // Com rotação
+            if(opcodeT16 == "ASR" || opcodeT16 == "LSL" || opcodeT16 == "LSR" || opcodeT16 == "ROR"){
+                // Se tiver offset
+                if(lastOperand.includes("#")){
+                    if(parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31){
+                        return "ERRO: Offset muito grande"
+                    }
+                    operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[2] + ' ' + vectorInst[4]
+                }
+                // Com registrador
+                else {
+                    if(vectorInst[1] != vectorInst[2]){
+                        return "ERRO: Formato não suportado (Rd := Rn EOR Rs) / Formato esperado: Rd := Rd EOR Rs"
+                    }
+                    operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[4]
+                }
+            }
+            else {
+                if(lastOperand.includes("#")){
+                    if(parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255){
+                        return "ERRO: Offset muito grande"
+                    }
+                }
+            }
             break;
         case "STMIA":
             opcodeT16 = verifyPUSH(vectorInst);
@@ -34,7 +116,7 @@ const ArmToThumb = (inst: string) => {
     }
 
     if (opcodeT16 !== "UEPA") {
-        let operandsT16 = inst.slice(vectorInst[0].length)
+        
         return opcodeT16 + operandsT16;
     }
 
@@ -86,7 +168,6 @@ const verifyPOP = (operand: string) => {
     if (operand.includes("R13")) {
         return "POP";
     }
-    console.log(operand);
     return "LDMIA"
 }
 
@@ -106,11 +187,9 @@ const verifyNEG = (instr: string[]) => {
     return "UEPA";
 }
 
-let teste1 = ArmToThumb("RSBS R0, R1, #0")
-let teste2 = ArmToThumb("RSBEQS R1, R2, R3")
-let teste3 = ArmToThumb("BAL R7")
-let teste4 = ArmToThumb("STMDB R13!, {R1, R2}")
+let teste1 = ArmToThumb("MOVS R0, R2, LSL #20")
+let teste2 = ArmToThumb("MOVS R0, R2, LSL #40")
+let teste3 = ArmToThumb("MOVS R0, #40")
+let teste4 = ArmToThumb("MOVS R0, #256")
 
 console.log(teste1 + "\n" + teste2 + "\n" + teste3 + "\n" + teste4)
-
-// TAMANHO DE REGISTRADORES (Hi e Lo)
