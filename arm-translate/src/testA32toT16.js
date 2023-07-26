@@ -14,6 +14,9 @@ var ArmToThumb = function (inst) {
                 return "ERRO: Formato não suportado (Rd := Rn + Rs + C-bit) / Formato esperado: Rd := Rd + Rs + C-bit";
             }
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "ADD":
             // Se tiver offset
@@ -59,7 +62,7 @@ var ArmToThumb = function (inst) {
             break;
         case "LDMIA": // e POP
             opcodeT16 = verifyPOP(vectorInst[1]);
-            if (opcodeT16 == "POP") {
+            if (opcodeT16 === "POP") {
                 operandsT16 = ' ' + inst.slice(inst.indexOf("{"));
             }
             break;
@@ -76,7 +79,7 @@ var ArmToThumb = function (inst) {
         case "MOV": // e ASR, LSL, LSR e ROR
             opcodeT16 = verifyMOV(vectorInst);
             // Com rotação
-            if (opcodeT16 == "ASR" || opcodeT16 == "LSL" || opcodeT16 == "LSR" || opcodeT16 == "ROR") {
+            if (opcodeT16 === "ASR" || opcodeT16 === "LSL" || opcodeT16 === "LSR" || opcodeT16 === "ROR") {
                 // Se tiver offset
                 if (lastOperand.includes("#")) {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
@@ -100,16 +103,83 @@ var ArmToThumb = function (inst) {
                 }
             }
             break;
-        case "STMIA":
-            opcodeT16 = verifyPUSH(vectorInst);
+        case "MUL":
+            if (vectorInst[1].includes(vectorInst[2])) {
+                operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
+            }
+            else {
+                if (vectorInst[1].includes(vectorInst[3])) {
+                    operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[2].slice(0, vectorInst[2].length - 1);
+                }
+                else {
+                    return "ERRO: Formato não suportado (Rd := Rn * Rs) / Formato esperado: Rd := Rd * Rs";
+                }
+            }
+            break;
+        case "MVN":
             break;
         case "NEG":
             opcodeT16 = verifyNEG(vectorInst);
+            operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[2].slice(0, vectorInst[2].length - 1);
+            break;
+        case "ORR":
+            if (vectorInst[1].includes(vectorInst[2])) {
+                operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
+            }
+            else {
+                if (vectorInst[1].includes(vectorInst[3])) {
+                    operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[2].slice(0, vectorInst[2].length - 1);
+                }
+                else {
+                    return "ERRO: Formato não suportado (Rd := Rn OR Rs) / Formato esperado: Rd := Rd OR Rs";
+                }
+            }
+            break;
+        case "SBC":
+            if (vectorInst[1] != vectorInst[2]) {
+                return "ERRO: Formato não suportado (Rd := Rn - Rs - NOT C-bit) / Formato esperado: Rd := Rd - Rs - NOT C-bit";
+            }
+            operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
+            break;
+        case "STMIA": // e PUSH
+            opcodeT16 = verifyPUSH(vectorInst);
+            if (opcodeT16 === "PUSH") {
+                operandsT16 = ' ' + inst.slice(inst.indexOf("{"));
+            }
+            break;
+        case "STR":
+            break;
+        case "STRB":
+            break;
+        case "STRH":
+            break;
+        case "SWI":
+            break;
+        case "SUB":
+            opcodeT16 = verifySUB(vectorInst);
+            if (opcodeT16 === "ADD") {
+                operandsT16 = ' ' + vectorInst[1] + ' #-' + vectorInst[3].slice(1);
+            }
+            // Se tiver offset
+            else {
+                if (lastOperand.includes("#")) {
+                    // Se offset tiver até 3 bits, mantém operandos
+                    // Se offset tiver mais que 3 e até 8 bits:
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 7 && parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) <= 255) {
+                        if (vectorInst[1] != vectorInst[2]) {
+                            return "ERRO: Formato não suportado (Rd := Rn - offset8) / Formato esperado: Rd := Rd - offset8";
+                        }
+                        operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
+                    }
+                }
+            }
+            break;
+        case "TST":
             break;
         default:
             break;
     }
-    if (opcodeT16 !== "UEPA") {
+    if (opcodeT16 != "UEPA") {
         return opcodeT16 + operandsT16;
     }
     return "UEPA";
@@ -169,8 +239,24 @@ var verifyNEG = function (instr) {
     }
     return "UEPA";
 };
-var teste1 = ArmToThumb("MOVS R0, R2, LSL #20");
-var teste2 = ArmToThumb("MOVS R0, R2, LSL #40");
-var teste3 = ArmToThumb("MOVS R0, #40");
-var teste4 = ArmToThumb("MOVS R0, #256");
+var verifySUB = function (instr) {
+    if (instr[1].includes("R13") && instr[2].includes("R13") && instr[3].includes("#")) {
+        return "ADD";
+    }
+    return "SUB";
+};
+var hasHighRegister = function (operands, specialFlag) {
+    var vectorHighReg = ["R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15"];
+    var maxlength = specialFlag ? 5 : 8;
+    for (var i = 0; i < maxlength; i++) {
+        if (operands.includes(vectorHighReg[i])) {
+            return true;
+        }
+    }
+    return false;
+};
+var teste1 = ArmToThumb("ADC R1, R1, R2");
+var teste2 = ArmToThumb("ADC R1, R13, R2");
+var teste3 = ArmToThumb("ADC R1, R1, R12");
+var teste4 = ArmToThumb("ADD R8, R8, R2");
 console.log(teste1 + "\n" + teste2 + "\n" + teste3 + "\n" + teste4);
