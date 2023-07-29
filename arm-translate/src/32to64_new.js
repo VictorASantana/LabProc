@@ -3,24 +3,33 @@ var vectorCond = ["EQ", "NE", "CS", "HS", "CC", "LO", "MI", "PL", "VS", "VC", "H
 const shftcodes = {"LSL":"", "LSR":"","ASR":"", "ROR":""};
 
 const instructions32to64 = {
-    "AND":"AND",
-    "EOR":"EOR",
-    "SUB":"SUB",
-    "RSB":"RSB",
-    "ADD":"ADD",
-    "ADC":"ADC",
-    "SBC":"SBC",
-    "RSC":"RSC",
-    "TST":"TST",
-    "TEQ":"TEQ",
-    "CMP":"CMP",
-    "CMN":"CMN",
-    "ORR":"ORR",
-    "MOV":"MOV",
-    "BIC":"BIC",
-    "MVN":"MVN",
-    "B": "B",
-    "BL":"BL"};
+    "ADC"   :  "ADC", //A64 não aceita imediato
+    "ADD"   :  "ADD", 
+    "AND"   :  "AND", 
+    "B"     :  "B",   //B com condição é B.cond no A64
+    "BIC"   :  "BIC", //A64 nao aceita imediato
+    "BL"    :  "BL", 
+    "BX"    :  "BR",   
+    "CMN"   :  "CMN", 
+    "CMP"   :  "CMP", 
+    "EOR"   :  "EOR",
+    "LDR"   :  "LDR",
+    "LDRB"  :  "LDRB",
+    "LDRH"  :  "LDRH",
+    "LDRSB" :  "LDRSB",
+    "LDRSH" :  "LDRSH",
+    "MLA"   :  "MADD", //tem 4 regs  
+    "MOV"   :  "MOV",  //tem 2 parametro só
+    "MUL"   :  "MUL",
+    "MVN"   :  "MVN",
+    "ORR"   :  "ORR",
+    "SBC"   :  "SBC", //não aceita imediatos no A64
+    "STR"   :  "STR", //aceita os mesmo formatos do a32 (pos/pre indexado)
+    "STRB"  :  "STRB",
+    "STRH"  :  "STRH",
+    "SUB"   :  "SUB",
+    "TST"   :   "TST"
+};
 
 var A32ToA64 = function (inst) {
     var vectorInst = inst.split(' ');
@@ -59,7 +68,7 @@ var GetopcodeA64 = function (opcodeA32) {
     var auxExtra = opcodeA32.slice(3);
     opcodeA32 = simplifyOpcodeA32(opcodeA32);
     interInstruction = instructions32to64[opcodeA32];
-    console.log(interInstruction)
+    //console.log(interInstruction)
     if (interInstruction != ""){
         if(auxExtra==="S") //values
             return [interInstruction+"S", auxExtra];
@@ -90,4 +99,8 @@ var teste1 = A32ToA64("ADDS R0, R0, #2");
 var teste2 = A32ToA64("MOVLE R1, R1, LSL #Offset5");
 var teste3 = A32ToA64("B R7");
 
-console.log(teste1 + "\n" + teste2 + "\n" + teste3);
+console.log(teste1 + "\n");
+//console.log(teste2 + "\n");
+//console.log(teste3);
+
+
