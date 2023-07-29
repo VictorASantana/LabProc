@@ -26,8 +26,6 @@ const instructions32to64 = {
     "MVN":"",
     "B": "B",
     "BEQ":"B.EQ",
-
-
 };
 
 var instructionsRegs = {
