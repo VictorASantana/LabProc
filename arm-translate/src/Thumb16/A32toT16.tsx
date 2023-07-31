@@ -103,13 +103,57 @@ const ArmToThumb = (inst: string) => {
                 return "ERRO: Instrução não suporta high registers"
             }
             break;
-        case "LDMIA": // e POP (FALTA REGISTRADORES)
+        case "LDMIA": // e POP
             opcodeT16 = verifyPOP(vectorInst[1]);
+            // Se for POP
             if(opcodeT16 === "POP"){
                 operandsT16 = ' ' + inst.slice(inst.indexOf("{"))
+                // Se o rlist tiver R15
+                if(operandsT16.includes(",")){
+                    if(!operandsT16.slice(operandsT16.lastIndexOf(",")).includes("R15") || hasHighRegister(operandsT16.slice(0, operandsT16.lastIndexOf(",")), false)){
+                        return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base ou o R15 na lista)"
+                    }
+                }
+                else {
+                    if(hasHighRegister(operandsT16, false)){
+                        return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base ou o R15 na lista)"
+                    }
+                }
+            }
+            // Se for LDMIA
+            else{
+                if(hasHighRegister(operandsT16, false)){
+                    return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base)"
+                }
             }
             break;
-        case "LDR": //(FALTA REGISTRADORES)
+        case "LDR":
+            // Confere primeiro registrador
+            if(hasHighRegister(vectorInst[1], false)){
+                return "ERRO: Instrução não suporta high registers (apenas R13 ou R15 no registrador de destino com imediato)"
+            }
+            // Se tiver imediato
+            if(lastOperand.includes("#")){
+                if(hasHighRegister(operandsT16, false)){
+                    if(!vectorInst[2].includes("R15") && !vectorInst[2].includes("R13")){
+                        return "ERRO: Instrução não suporta high registers (apenas R13 ou R15 no registrador de destino com imediato)"
+                    }
+                    if(parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255){
+                        return "ERRO: Imediato maior que o valor máximo (255)"
+                    }
+                }
+                else{
+                    if(parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31){
+                        return "ERRO: Imediato maior que o valor máximo (31)"
+                    }
+                }
+            }
+            // Sem imediato
+            else{
+                if(hasHighRegister(operandsT16, false)){
+                    return "ERRO: Instrução não suporta high registers (apenas R13 ou R15 no registrador de destino com imediato)"
+                }
+            }
             break;
         case "LDRB":
             if(hasHighRegister(operandsT16, false)){
@@ -217,13 +261,57 @@ const ArmToThumb = (inst: string) => {
                 return "ERRO: Instrução não suporta high registers"
             }
             break;
-        case "STMIA": // e PUSH (FALTA REGISTRADORES)
-            opcodeT16 = verifyPUSH(vectorInst) 
+        case "STMIA": // e PUSH
+            opcodeT16 = verifyPUSH(vectorInst)
+            // Se for PUSH 
             if(opcodeT16 === "PUSH"){
                 operandsT16 = ' ' + inst.slice(inst.indexOf("{"))
+                // Se o rlist tiver R14
+                if(operandsT16.includes(",")){
+                    if(!operandsT16.slice(operandsT16.lastIndexOf(",")).includes("R14") || hasHighRegister(operandsT16.slice(0, operandsT16.lastIndexOf(",")), false)){
+                        return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base ou o R14 na lista)"
+                    }
+                }
+                else {
+                    if(hasHighRegister(operandsT16, false)){
+                        return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base ou o R14 na lista)"
+                    }
+                }
+            }
+            // Se for STMIA
+            else{
+                if(hasHighRegister(operandsT16, false)){
+                    return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base em caso de STMDB)"
+                }
             }
             break;
-        case "STR": // (FALTA REGISTRADORES)
+        case "STR":
+            // Confere primeiro registrador
+            if(hasHighRegister(vectorInst[1], false)){
+                return "ERRO: Instrução não suporta high registers (apenas R13 ou R15 no registrador de destino com imediato)"
+            }
+            // Se tiver imediato
+            if(lastOperand.includes("#")){
+                if(hasHighRegister(operandsT16, false)){
+                    if(!vectorInst[2].includes("R13")){
+                        return "ERRO: Instrução não suporta high registers (apenas R13 no registrador de destino com imediato)"
+                    }
+                    if(parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255){
+                        return "ERRO: Imediato maior que o valor máximo (255)"
+                    }
+                }
+                else{
+                    if(parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31){
+                        return "ERRO: Imediato maior que o valor máximo (31)"
+                    }
+                }
+            }
+            // Sem imediato
+            else{
+                if(hasHighRegister(operandsT16, false)){
+                    return "ERRO: Instrução não suporta high registers (apenas R13 no registrador de destino com imediato)"
+                }
+            }
             break;
         case "STRB":
             if(hasHighRegister(operandsT16, false)){
@@ -276,7 +364,7 @@ const ArmToThumb = (inst: string) => {
         return opcodeT16 + operandsT16
     }
 
-    return "UEPA"
+    return "ERRO: Operação não existente"
 }
 
 const simplifyOpcodeA32 = (opcodeA32: string) => {
@@ -351,8 +439,8 @@ const verifySUB = (instr: string[]) => {
 }
 
 const hasHighRegister = (operands: string, specialFlag: boolean) => {
-    let vectorHighReg = ["R8", "R9", "R10", "R11", "R12", "R14", "R13", "R15"]
-    let maxlength = specialFlag ? 6 : 8
+    let vectorHighReg = ["R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15"]
+    let maxlength = specialFlag ? 5 : 8
 
     for(let i = 0; i < maxlength; i++){
         if(operands.includes(vectorHighReg[i])){
@@ -363,9 +451,14 @@ const hasHighRegister = (operands: string, specialFlag: boolean) => {
     return false
 }
 
-let teste1 = ArmToThumb("ADC R1, R1, R2")
-let teste2 = ArmToThumb("ADC R1, R13, R2")
-let teste3 = ArmToThumb("ADC R1, R1, R12")
-let teste4 = ArmToThumb("ADD R8, R8, R2")
+let teste1 = ArmToThumb("STMDB R13!, {R1-R3, R14}")
+let teste2 = ArmToThumb("STMDB R13!, {R10-R12}")
+let teste3 = ArmToThumb("STMDB R13!, {R1, R3, R14}")
+let teste4 = ArmToThumb("STMDB R13!, {R1, R12, R14}")
 
-console.log(teste1 + "\n" + teste2 + "\n" + teste3 + "\n" + teste4)
+console.log(teste1 + "\n" + teste2 + "\n" + teste3 + "\n" + teste4 + "\n")
+
+// TUDO MAIUSCULO
+// R13 = SP
+// R14 = LR
+// R15 = PC

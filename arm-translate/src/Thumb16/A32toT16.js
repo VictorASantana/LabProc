@@ -29,6 +29,26 @@ var ArmToThumb = function (inst) {
                     }
                     operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
                 }
+                if (hasHighRegister(operandsT16, false)) {
+                    if (!(vectorInst[2].includes("R13") || vectorInst[2].includes("R15"))) {
+                        return "ERRO: Instrução não suporta high registers";
+                    }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 1023) {
+                        return "ERRO: Imediato maior que o valor máximo (1023)";
+                    }
+                    if (vectorInst[1].includes("R13") && vectorInst[2].includes("R13")) {
+                        operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
+                    }
+                }
+            }
+            // Sem offset
+            else {
+                if (hasHighRegister(operandsT16, false)) {
+                    if (vectorInst[1] != vectorInst[2]) {
+                        return "ERRO: Formato não suportado / Formato esperado: Rd/Hd := Rd/Hd + Hs/Rs";
+                    }
+                    operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
+                }
             }
             break;
         case "AND":
@@ -36,6 +56,9 @@ var ArmToThumb = function (inst) {
                 return "ERRO: Formato não suportado (Rd := Rn AND Rs) / Formato esperado: Rd := Rd AND Rs";
             }
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "B":
             opcodeT16 = verifyB(vectorInst[0]);
@@ -45,36 +68,109 @@ var ArmToThumb = function (inst) {
                 return "ERRO: Formato não suportado (Rd := Rn AND NOT Rs) / Formato esperado: Rd := Rd AND NOT Rs";
             }
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "BL":
             break;
         case "BX":
             break;
         case "CMN":
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "CMP":
+            if (lastOperand.includes("#")) {
+                if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
+                    return "ERRO: Imediato maior que o valor máximo (255)";
+                }
+                if (hasHighRegister(operandsT16, false)) {
+                    return "ERRO: Instrução não suporta high registers com offset";
+                }
+            }
             break;
         case "EOR":
             if (vectorInst[1] != vectorInst[2]) {
                 return "ERRO: Formato não suportado (Rd := Rn EOR Rs) / Formato esperado: Rd := Rd EOR Rs";
             }
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "LDMIA": // e POP
             opcodeT16 = verifyPOP(vectorInst[1]);
+            // Se for POP
             if (opcodeT16 === "POP") {
                 operandsT16 = ' ' + inst.slice(inst.indexOf("{"));
+                // Se o rlist tiver R15
+                if (operandsT16.includes(",")) {
+                    if (!operandsT16.slice(operandsT16.lastIndexOf(",")).includes("R15") || hasHighRegister(operandsT16.slice(0, operandsT16.lastIndexOf(",")), false)) {
+                        return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base ou o R15 na lista)";
+                    }
+                }
+                else {
+                    if (hasHighRegister(operandsT16, false)) {
+                        return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base ou o R15 na lista)";
+                    }
+                }
+            }
+            // Se for LDMIA
+            else {
+                if (hasHighRegister(operandsT16, false)) {
+                    return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base)";
+                }
             }
             break;
         case "LDR":
+            // Confere primeiro registrador
+            if (hasHighRegister(vectorInst[1], false)) {
+                return "ERRO: Instrução não suporta high registers (apenas R13 ou R15 no registrador de destino com imediato)";
+            }
+            // Se tiver imediato
+            if (lastOperand.includes("#")) {
+                if (hasHighRegister(operandsT16, false)) {
+                    if (!vectorInst[2].includes("R15") && !vectorInst[2].includes("R13")) {
+                        return "ERRO: Instrução não suporta high registers (apenas R13 ou R15 no registrador de destino com imediato)";
+                    }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
+                        return "ERRO: Imediato maior que o valor máximo (255)";
+                    }
+                }
+                else {
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
+                        return "ERRO: Imediato maior que o valor máximo (31)";
+                    }
+                }
+            }
+            // Sem imediato
+            else {
+                if (hasHighRegister(operandsT16, false)) {
+                    return "ERRO: Instrução não suporta high registers (apenas R13 ou R15 no registrador de destino com imediato)";
+                }
+            }
             break;
         case "LDRB":
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "LDRH":
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "LDSB":
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "LDSH":
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "MOV": // e ASR, LSL, LSR e ROR
             opcodeT16 = verifyMOV(vectorInst);
@@ -94,11 +190,17 @@ var ArmToThumb = function (inst) {
                     }
                     operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[4];
                 }
+                if (hasHighRegister(operandsT16, false)) {
+                    return "ERRO: Instrução não suporta high registers";
+                }
             }
             else {
                 if (lastOperand.includes("#")) {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
                         return "ERRO: Offset muito grande";
+                    }
+                    if (hasHighRegister(operandsT16, false)) {
+                        return "ERRO: Instrução não suporta high registers";
                     }
                 }
             }
@@ -115,12 +217,21 @@ var ArmToThumb = function (inst) {
                     return "ERRO: Formato não suportado (Rd := Rn * Rs) / Formato esperado: Rd := Rd * Rs";
                 }
             }
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "MVN":
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "NEG":
             opcodeT16 = verifyNEG(vectorInst);
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[2].slice(0, vectorInst[2].length - 1);
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "ORR":
             if (vectorInst[1].includes(vectorInst[2])) {
@@ -134,24 +245,80 @@ var ArmToThumb = function (inst) {
                     return "ERRO: Formato não suportado (Rd := Rn OR Rs) / Formato esperado: Rd := Rd OR Rs";
                 }
             }
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "SBC":
             if (vectorInst[1] != vectorInst[2]) {
                 return "ERRO: Formato não suportado (Rd := Rn - Rs - NOT C-bit) / Formato esperado: Rd := Rd - Rs - NOT C-bit";
             }
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[3];
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "STMIA": // e PUSH
             opcodeT16 = verifyPUSH(vectorInst);
+            // Se for PUSH 
             if (opcodeT16 === "PUSH") {
                 operandsT16 = ' ' + inst.slice(inst.indexOf("{"));
+                // Se o rlist tiver R14
+                if (operandsT16.includes(",")) {
+                    if (!operandsT16.slice(operandsT16.lastIndexOf(",")).includes("R14") || hasHighRegister(operandsT16.slice(0, operandsT16.lastIndexOf(",")), false)) {
+                        return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base ou o R14 na lista)";
+                    }
+                }
+                else {
+                    if (hasHighRegister(operandsT16, false)) {
+                        return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base ou o R14 na lista)";
+                    }
+                }
+            }
+            // Se for STMIA
+            else {
+                if (hasHighRegister(operandsT16, false)) {
+                    return "ERRO: Instrução não suporta high registers (apenas o R13 no endereço base em caso de STMDB)";
+                }
             }
             break;
         case "STR":
+            // Confere primeiro registrador
+            if (hasHighRegister(vectorInst[1], false)) {
+                return "ERRO: Instrução não suporta high registers (apenas R13 ou R15 no registrador de destino com imediato)";
+            }
+            // Se tiver imediato
+            if (lastOperand.includes("#")) {
+                if (hasHighRegister(operandsT16, false)) {
+                    if (!vectorInst[2].includes("R13")) {
+                        return "ERRO: Instrução não suporta high registers (apenas R13 no registrador de destino com imediato)";
+                    }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
+                        return "ERRO: Imediato maior que o valor máximo (255)";
+                    }
+                }
+                else {
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
+                        return "ERRO: Imediato maior que o valor máximo (31)";
+                    }
+                }
+            }
+            // Sem imediato
+            else {
+                if (hasHighRegister(operandsT16, false)) {
+                    return "ERRO: Instrução não suporta high registers (apenas R13 no registrador de destino com imediato)";
+                }
+            }
             break;
         case "STRB":
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "STRH":
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "SWI":
             break;
@@ -159,6 +326,9 @@ var ArmToThumb = function (inst) {
             opcodeT16 = verifySUB(vectorInst);
             if (opcodeT16 === "ADD") {
                 operandsT16 = ' ' + vectorInst[1] + ' #-' + vectorInst[3].slice(1);
+                if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 127) {
+                    return "ERRO: Imediato muito grande";
+                }
             }
             // Se tiver offset
             else {
@@ -173,8 +343,14 @@ var ArmToThumb = function (inst) {
                     }
                 }
             }
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         case "TST":
+            if (hasHighRegister(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers";
+            }
             break;
         default:
             break;
@@ -182,7 +358,7 @@ var ArmToThumb = function (inst) {
     if (opcodeT16 != "UEPA") {
         return opcodeT16 + operandsT16;
     }
-    return "UEPA";
+    return "Operação não existente";
 };
 var simplifyOpcodeA32 = function (opcodeA32) {
     var _loop_1 = function (i) {
@@ -255,8 +431,8 @@ var hasHighRegister = function (operands, specialFlag) {
     }
     return false;
 };
-var teste1 = ArmToThumb("ADC R1, R1, R2");
-var teste2 = ArmToThumb("ADC R1, R13, R2");
-var teste3 = ArmToThumb("ADC R1, R1, R12");
-var teste4 = ArmToThumb("ADD R8, R8, R2");
-console.log(teste1 + "\n" + teste2 + "\n" + teste3 + "\n" + teste4);
+var teste1 = ArmToThumb("STMDBI R13!, {R1-R3, R14}");
+var teste2 = ArmToThumb("STMDB R13!, {R10-R12}");
+var teste3 = ArmToThumb("STMDB R13!, {R1, R3, R14}");
+var teste4 = ArmToThumb("STMDB R13!, {R1, R12, R14}");
+console.log(teste1 + "\n" + teste2 + "\n" + teste3 + "\n" + teste4 + "\n");
