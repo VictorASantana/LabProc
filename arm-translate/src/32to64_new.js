@@ -68,8 +68,8 @@ regexRegs = /R(1[0-5]|[0-9])/;
 
 var A32ToA64 = function (inst) {
     var vectorInst = inst.split(' ');
-    console.log(vectorInst[0])
     const interOut = GetopcodeA64(vectorInst[0]);
+    
     if(interOut === null)
         return "Não foi possivel encontrar a instrução"
 
@@ -110,9 +110,9 @@ var A32ToA64 = function (inst) {
             break;
     }
 
-    wholeInstruction = treatRegistors(opcodeA64, vectorInst, disposicaoRegsShift[0]);
+    wholeInstruction = treatRegistors(opcodeA64, setSignal, vectorInst, disposicaoRegsShift[0]);
 
-    if (auxExtra!="" && auxExtra!="S")
+    if (auxExtra != "" && auxExtra != "S")
         wholeInstruction = instructionCond(wholeInstruction, auxExtra)
 
     return wholeInstruction;
@@ -128,10 +128,13 @@ var GetopcodeA64 = function (opcodeA32) {
     else if (padraoBranchLink.test(opcodeA32))
         return ["BL", "", opcodeA32.slice(2)];
 
+    const condicionais_e_S = new RegExp(`^(${vectorCond.join('|')})S$`);
     var auxExtra = opcodeA32.slice(3);
     opcodeA32 = simplifyOpcodeA32(opcodeA32);
-    console.log(opcodeA32)
     interInstruction = instructions32to64[opcodeA32];
+
+    if (condicionais_e_S.test(auxExtra))
+        return [interInstruction, "S", auxExtra.slice(0,2)]; 
 
     if (interInstruction != ""){
         if(auxExtra==="S") //values
@@ -144,12 +147,21 @@ var GetopcodeA64 = function (opcodeA32) {
 };
 
 var simplifyOpcodeA32 = function (opcodeA32) {
-    var auxSliced = opcodeA32.slice(0, 3);
-    var auxExtra = opcodeA32.slice(3);
-    if (Object.keys(instructions32to64).some(function (x) { return x === auxSliced; }) && vectorCond.some(function (x) { return x === auxExtra; })) {
-        return auxSliced;
+    var _loop_1 = function(i){
+        var auxSliced = opcodeA32.slice(0, i);
+        var auxExtra = opcodeA32.slice(i);
+        if (Object.keys(instructions32to64).some(function (x) { return x === auxSliced; }) && vectorCond.some(function (x) { return x === auxExtra || x + 'S' === auxExtra; })) {
+            return {value: auxSliced};
+        }
+    }
+
+    for (var i = 1; i <= opcodeA32.length; i++) {
+        var state_1 = _loop_1(i);
+        if (typeof state_1 === "object")
+            return state_1.value;
     }
     return opcodeA32;
+    
 };
 
 var verifyRegs = function (vectorInst, opcodeA64) {
@@ -184,8 +196,8 @@ var verifyShift = function (vectorInst, posicaoShift){
     return false;
 };
 
-var treatRegistors = function (opcodeA64, vectorInst, disposicaoRegs){
-    var tudaoInstruction = opcodeA64 + " ";
+var treatRegistors = function (opcodeA64, setSignal, vectorInst, disposicaoRegs){
+    var tudaoInstruction = opcodeA64 +setSignal+ " ";
 
     for(var i = 1; i < disposicaoRegs.length+1; i++){
         if (disposicaoRegs[i-1])
