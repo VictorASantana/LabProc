@@ -5,6 +5,8 @@ let vectorCond = ["EQ", "NE", "CS", "CC", "MI", "PL", "VS", "VC", "HI", "LS", "G
 let vectorAddr = ["ED", "FD", "EA", "FA", "IB", "IA", "DB", "DA"];
 
 const ArmToThumb = (inst: string) => {
+    inst = inst.toUpperCase()
+
     let vectorInst = inst.split(' ')
 
     let opcodeT16 = GetOpcodeT16(vectorInst[0])
@@ -360,7 +362,9 @@ const ArmToThumb = (inst: string) => {
     }
 
     if (opcodeT16 != "UEPA") {
-        
+        operandsT16 = operandsT16.replace(/R13/gi, "SP")
+        operandsT16 = operandsT16.replace(/R14/gi, "LR")
+        operandsT16 = operandsT16.replace(/R15/gi, "PC")
         return opcodeT16 + operandsT16
     }
 
@@ -452,13 +456,8 @@ const hasHighRegister = (operands: string, specialFlag: boolean) => {
 }
 
 let teste1 = ArmToThumb("STMDB R13!, {R1-R3, R14}")
-let teste2 = ArmToThumb("STMDB R13!, {R10-R12}")
-let teste3 = ArmToThumb("STMDB R13!, {R1, R3, R14}")
-let teste4 = ArmToThumb("STMDB R13!, {R1, R12, R14}")
+let teste2 = ArmToThumb("stmdb R13!, {R1-R3, R14}")
+let teste3 = ArmToThumb("LDMIA R13!, {R1, R3, R15}")
+let teste4 = ArmToThumb("ldmia R13!, {R1, R2, R14}")
 
 console.log(teste1 + "\n" + teste2 + "\n" + teste3 + "\n" + teste4 + "\n")
-
-// TUDO MAIUSCULO
-// R13 = SP
-// R14 = LR
-// R15 = PC
