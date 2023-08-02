@@ -30,11 +30,22 @@ export const SelectionStyled = styled.select`
 `;
 
 export const InputStyled = styled.textarea`
-    background-color: #eee;
+    background-color: #080303;
+    color: #e0e1dd;
     margin: 16px;
     width: 35rem;
     height: 30rem;
     padding: 4px;
     text-align: left;
     vertical-align: top;
+`;
+
+export const ParagraphStyled = styled.p`
+    color: #e0e1dd;
+    margin: 16px;
+`;
+
+export const ButtonStyled = styled.button`
+    margin: 16px;
+
 `;
