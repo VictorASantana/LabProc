@@ -41,7 +41,7 @@ const partes_e_registradores = {
     "B"     :[], //nao será utilizado, uma vez que deve ser com label ou com valores de pc
     "BIC"   :[[3, 5], [[1, 1, 1], [1, 1, 1, 0, 0]], [0, 4]], //A64 nao aceita imediato
     "BL"    :[], 
-    "BR"    :[[1], [1], [[1]]], //registrador tem que ser X, ou seja, precisa traduzir para X   
+    "BR"    :[[1], [[1]], [0]], //registrador tem que ser X, ou seja, precisa traduzir para X   
     "CMN"   :[[2, 4, 2, 4], [[1, 1], [1, 1, 0, 0], [1, 0], [1, 0, 0, 0]], [0, 0, 0, 0]], 
     "CMP"   :[[2, 4, 2, 4], [[1, 1], [1, 1, 0, 0], [1, 0], [1, 0, 0, 0]], [0, 0, 0, 0]], 
     "EOR"   :[[3, 5, 3], [[1, 1, 0], [1, 1, 1, 0, 0], [1, 1, 1]], [0, 4, 0]],
@@ -63,11 +63,8 @@ const partes_e_registradores = {
     "TST"   :[[2, 2, 4], [[1, 0], [1, 1], [1, 1, 0, 0]], [0, 0, 3]]
 };
 
-
-regexRegs = /R(1[0-5]|[0-9])/; 
-
 var A32ToA64 = function (inst) {
-    var vectorInst = inst.split(' ');
+    var vectorInst = inst.toUpperCase().split(' ');
     const interOut = GetopcodeA64(vectorInst[0]);
     
     if(interOut === null)
@@ -81,11 +78,11 @@ var A32ToA64 = function (inst) {
 
     disposicaoRegsShift = verifyRegs(vectorInst, opcodeA64)
     if (disposicaoRegsShift === null)
-        return "Erro na disposição dos registradores";
+        return "Erro na disposição dos registradores para a tradução para A64";
 
     shiftCorrect = verifyShift(vectorInst, disposicaoRegsShift[1])
     if (! shiftCorrect && disposicaoRegsShift === [0])
-        return "Erro no Barrel Shift"
+        return "Erro no Barrel Shift para a tradução para A64"
 
     var operandsA64 = inst.slice(vectorInst[0].length);
 
@@ -96,15 +93,20 @@ var A32ToA64 = function (inst) {
             if (vectorInst.length === 2)
                 return opcodeA64 + " " + vectorInst[1];
             return null;
-        case "BL":
+        case "BR":
             if (vectorInst.length === 2 && auxExtra!="")
                 return instructionCond(opcodeA64 + " " + vectorInst[1], auxExtra)
             else if (vectorInst.length === 2)
                 return opcodeA64 + " " + vectorInst[1]
             return null
-        case "LDR" || "STR": //registrador precisa ser X
+        case "STR":
+        case "LDR": //registrador precisa ser X
             vectorInst[2] = vectorInst[2].replace("R", "X")
-        case "CMN" || "CMP":
+            if (disposicaoRegsShift[0].length === 5)
+                if (vectorInst[4] != "LSL")
+                    return "Operação shift inválida para A64, não é permitido o \""+ vectorInst[4]+"\""
+        case "CMP":
+        case "CMN":
             //ele utiliza o extend, precisaria mapear e verificar
         default:
             break;
@@ -161,20 +163,19 @@ var simplifyOpcodeA32 = function (opcodeA32) {
             return state_1.value;
     }
     return opcodeA32;
-    
 };
 
 var verifyRegs = function (vectorInst, opcodeA64) {
 
     const infos_operandos = partes_e_registradores[opcodeA64];
-
+    console.log(infos_operandos)
     if(infos_operandos.length == 0)
         return [0]
 
     for(var i = 0; i < infos_operandos[0].length ; i++){
         if(vectorInst.length - 1 === infos_operandos[0][i]){
             for (var j = 0; j < infos_operandos[0][i]; j++){
-                if (regexRegs.test(vectorInst[j+1]) == infos_operandos[1][i][j]){ //verifica se true == 1 ou false == 0, significado se tem ou nao tem mesmo regs
+                if (/R(1[0-5]|[0-9])/.test(vectorInst[j+1]) == infos_operandos[1][i][j]){ //verifica se true == 1 ou false == 0, significado se tem ou nao tem mesmo regs
                     if (j+1 === infos_operandos[0][i])
                         return [infos_operandos[1][i], infos_operandos[2][i]];
                 }
@@ -213,12 +214,12 @@ var instructionCond = function (wholeInstruction, auxExtra){
     return structPadInstCond.replace("COND", auxExtra).replace("INSTRUCAO", wholeInstruction)
 }
 
-var teste1 = A32ToA64("ADDEQS R0, R0, R0");
-var teste2 = A32ToA64("MOVLE R1, R1");
-var teste3 = A32ToA64("BL label");
+// var teste1 = A32ToA64("ADDEQS R0, R0, R0");
+// var teste2 = A32ToA64("MOVLE R1, R1");
+var teste3 = A32ToA64("STR R1, [R2, R4]!");
 
-console.log(teste1 + "\n");
-console.log(teste2 + "\n");
+// console.log(teste1 + "\n\n");
+// console.log(teste2 + "\n\n");
 console.log(teste3);
 
 
