@@ -2,6 +2,7 @@ import React from 'react';
 import { BodyStyled, MainStyled, ButtonStyled, SectionStyled, SelectionStyled, SubTitleStyled, TitleStyled, InputStyled, ParagraphStyled } from './App.style';
 import { ArmToThumb } from './Arm32ToThumb16/A32toT16';
 import { ThumbToArm } from './Thumb16ToArm32/T16toA32';
+import { A32toA64 } from './Arm32toArm64/32to64';
 
 function App() {
   const [used, setUsed] = React.useState('')
@@ -23,6 +24,14 @@ function App() {
     const t16 = text.split("\n")
     for (let i = 0; i < t16.length; i++) {
       setOut((prev) => [...prev, ThumbToArm(t16[i]) + "\n"])
+    }
+  }
+
+  const translateToARM64 = () => {
+    setARM([])
+    const a32 = text.split("\n")
+    for (let i = 0; i < a32.length; i++) {
+      setOut((prev) => [...prev, A32toA64(a32[i]) + "\n"])
     }
   }
 
