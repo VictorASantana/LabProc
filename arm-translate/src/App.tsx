@@ -43,7 +43,7 @@ function App() {
           <InputStyled onChange={(text: { target: { value: React.SetStateAction<string>; }; }) => setText(text.target.value)} />
         </SectionStyled>
         <SectionStyled>
-          <SubTitleStyled>{used === architecture[0] ? architecture[1] : architecture[0]}</SubTitleStyled>
+          <SubTitleStyled>{used === architecture[1] ? architecture[0] : architecture[1]}</SubTitleStyled>
           {out.map((instr) => (
             <>
               <ParagraphStyled>{instr}</ParagraphStyled >
