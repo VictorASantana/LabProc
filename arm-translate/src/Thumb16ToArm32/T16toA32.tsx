@@ -1,4 +1,4 @@
-let matrixT16 = [["ADC", "ADD", "AND", "B", "BIC", "BL", "BX", "CMN", "CMP", "EOR", "LDMIA", "LDR", "LDRB", "LDRH", "LDSB", "LDSH", "MOV", "MUL", "MVN", "NEG", "ORR", "POP", "PUSH", "SBC", "STMIA", "STR", "STRB", "STRH", "SWI", "SUB", "TST"], [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 16, 17, 18, 21, 25, 26, 28, 27, 13, 32, 30, 32, 33, 34, 35, 37, 36, 40]]
+let matrixT16 = [["ADC", "ADD", "AND", "B", "BIC", "BL", "BX", "CMN", "CMP", "EOR", "LDMIA", "LDR", "LDRB", "LDRH", "LDSB", "LDSH", "MOV", "MUL", "MVN", "NEG", "ORR", "POP", "PUSH", "SBC", "STMIA", "STR", "STRB", "STRH", "SWI", "SUB", "TST", "ASR", "LSL", "LSR"], [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 16, 17, 18, 21, 25, 26, 28, 27, 13, 32, 30, 32, 33, 34, 35, 37, 36, 40]]
 let vectorA32 = ["UND", "ADC", "ADD", "AND", "B", "BIC", "BL", "BX", "CDP", "CMN", "CMP", "EOR", "LDC", "LDM", "LDR", "LDRB", "LDRH", "LDRSB", "LDRSH", "MCR", "MLA", "MOV", "MRC", "MRS", "MSR", "MUL", "MVN", "ORR", "RSB", "RSC", "SBC", "STC", "STM", "STR", "STRB", "STRH", "SUB", "SWI", "SWP", "TEQ", "TST"]
 
 export const ThumbToArm = (inst: string) => {
@@ -34,6 +34,9 @@ export const ThumbToArm = (inst: string) => {
                         if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 7) {
                             return "ERRO: Imediato maior que o valor máximo (7)"
                         }
+                        if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                            return "ERRO: Imediato tem que ser positivo"
+                        }
                         opcodeT16 = "ADDS"
                     }
                     else {
@@ -41,6 +44,9 @@ export const ThumbToArm = (inst: string) => {
                         if (vectorInst[2].includes("R13") || vectorInst[2].includes("SP") || vectorInst[2].includes("R15") || vectorInst[2].includes("PC")) {
                             if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
                                 return "ERRO: Imediato maior que o valor máximo (255)"
+                            }
+                            if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                                return "ERRO: Imediato tem que ser positivo"
                             }
                         }
                         else {
@@ -67,6 +73,9 @@ export const ThumbToArm = (inst: string) => {
                         if (!hasHighRegisterThumb(vectorInst[1], false)) {
                             if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
                                 return "ERRO: Imediato maior que o valor máximo (255)"
+                            }
+                            if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                                return "ERRO: Imediato tem que ser positivo"
                             }
                             opcodeT16 = "ADDS"
                             operandsT16 = " " + vectorInst[1] + " " + vectorInst[1] + " " + vectorInst[2]
@@ -120,6 +129,30 @@ export const ThumbToArm = (inst: string) => {
             opcodeT16 = opcodeT16 + "S"
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[1] + ' ' + vectorInst[2]
             break;
+        case "ASR":
+            if (vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16)) {
+                opcodeT16 = "MOVS"
+                operandsT16 = " " + vectorInst[1] + " " + vectorInst[1] + " ASR " + vectorInst[2]
+            }
+            else {
+                if (vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16) && vectorInst[3].includes("#")) {
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
+                        return "ERRO: Imediato maior que o valor máximo (31)"
+                    }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                        return "ERRO: Imediato tem que ser positivo"
+                    }
+                    opcodeT16 = "MOVS"
+                    operandsT16 = " " + vectorInst[1] + " " + vectorInst[2] + " ASR " + vectorInst[3]
+                }
+                else {
+                    return "ERRO: Formato não suportado / Formato esperado: ASR Rd, Rs | ASR Rd, Rs, #Offset5"
+                }
+            }
+            if (hasHighRegisterThumb(operandsT16, false)) {
+                return "ERRO: Instrução não suporta high registers"
+            }
+            break;
         case "B":
             // Caso de OPCODE ser não condicional (B)
             if (vectorInst[0] === "B" && vectorInst.length == 2 && !isRegister(vectorInst[1], opcodeT16)) {
@@ -171,6 +204,9 @@ export const ThumbToArm = (inst: string) => {
                 if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
                     return "ERRO: Imediato maior que o valor máximo (255)"
                 }
+                if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                    return "ERRO: Imediato tem que ser positivo"
+                }
                 if (hasHighRegisterThumb(operandsT16, false)) {
                     return "ERRO: Instrução não suporta high registers com offset"
                 }
@@ -212,10 +248,16 @@ export const ThumbToArm = (inst: string) => {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
                         return "ERRO: Imediato maior que o valor máximo (255)"
                     }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                        return "ERRO: Imediato tem que ser positivo"
+                    }
                 }
                 else {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
                         return "ERRO: Imediato maior que o valor máximo (31)"
+                    }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                        return "ERRO: Imediato tem que ser positivo"
                     }
                 }
             }
@@ -243,6 +285,9 @@ export const ThumbToArm = (inst: string) => {
                 if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
                     return "ERRO: Imediato maior que o valor máximo (31)"
                 }
+                if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                    return "ERRO: Imediato tem que ser positivo"
+                }
             }
             else {
                 if (!isRegister(vectorInst[3].slice(0, vectorInst[3].length - 1), opcodeT16)) {
@@ -264,6 +309,9 @@ export const ThumbToArm = (inst: string) => {
                 if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
                     return "ERRO: Imediato maior que o valor máximo (31)"
                 }
+                if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                    return "ERRO: Imediato tem que ser positivo"
+                }
             }
             else {
                 if (!isRegister(vectorInst[3].slice(0, vectorInst[3].length - 1), opcodeT16)) {
@@ -280,6 +328,9 @@ export const ThumbToArm = (inst: string) => {
                 if (vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16) && vectorInst[3].includes("#")) {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
                         return "ERRO: Imediato maior que o valor máximo (31)"
+                    }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                        return "ERRO: Imediato tem que ser positivo"
                     }
                     opcodeT16 = "MOVS"
                     operandsT16 = " " + vectorInst[1] + " " + vectorInst[2] + " LSL " + vectorInst[3]
@@ -320,6 +371,9 @@ export const ThumbToArm = (inst: string) => {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
                         return "ERRO: Imediato maior que o valor máximo (31)"
                     }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                        return "ERRO: Imediato tem que ser positivo"
+                    }
                     opcodeT16 = "MOVS"
                     operandsT16 = " " + vectorInst[1] + " " + vectorInst[2] + " LSR " + vectorInst[3]
                 }
@@ -332,19 +386,26 @@ export const ThumbToArm = (inst: string) => {
             }
             break;
         case "MOV":
-            // Dois registradores como operando
+            // Um registrador e um offset como operandos
             if (vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("#")) {
                 if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
                     return "ERRO: Imediato maior que o valor máximo (255)"
+                }
+                if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                    return "ERRO: Imediato tem que ser positivo"
                 }
                 if (hasHighRegisterThumb(operandsT16, false)) {
                     return "ERRO: Instrução não suporta high registers com offset"
                 }
                 opcodeT16 = "MOVS"
             }
+            // Dois registradores como operando
             else {
-                if (!isRegister(vectorInst[2], opcodeT16)) {
-                    return "ERRO: Formato não suportado / Formato esperado: MOV Rd, #Offset8 | MOV Rd, Rs"
+                if (!isRegister(vectorInst[1], opcodeT16) || !isRegister(vectorInst[2], opcodeT16)) {
+                    return "ERRO: Formato não suportado / Formato esperado: MOV Rd, #Offset8 | MOV Rd, Hs | MOV Hd, Rs | MOV Hd, Hs"
+                }
+                if (!hasHighRegisterThumb(operandsT16, false)){
+                    return "ERRO: MOV Rd, Rs antes do Thumb-2 somente com um ou ambos operandos Hi register"
                 }
             }
             break;
@@ -453,10 +514,16 @@ export const ThumbToArm = (inst: string) => {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
                         return "ERRO: Imediato maior que o valor máximo (255)"
                     }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                        return "ERRO: Imediato tem que ser positivo"
+                    }
                 }
                 else {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
                         return "ERRO: Imediato maior que o valor máximo (31)"
+                    }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                        return "ERRO: Imediato tem que ser positivo"
                     }
                 }
             }
@@ -484,6 +551,9 @@ export const ThumbToArm = (inst: string) => {
                 if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
                     return "ERRO: Imediato maior que o valor máximo (31)"
                 }
+                if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                    return "ERRO: Imediato tem que ser positivo"
+                }
             }
             else {
                 if (!isRegister(vectorInst[3].slice(0, vectorInst[3].length - 1), opcodeT16)) {
@@ -504,6 +574,9 @@ export const ThumbToArm = (inst: string) => {
             if (lastOperand.includes("#")) {
                 if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
                     return "ERRO: Imediato maior que o valor máximo (31)"
+                }
+                if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                    return "ERRO: Imediato tem que ser positivo"
                 }
             }
             else {
@@ -528,6 +601,9 @@ export const ThumbToArm = (inst: string) => {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 7) {
                         return "ERRO: Imediato maior que o valor máximo (7)"
                     }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                        return "ERRO: Imediato tem que ser positivo"
+                    }
                 }
                 // Se ultimo operando for registrador também
                 else {
@@ -541,6 +617,9 @@ export const ThumbToArm = (inst: string) => {
                 if (vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && lastOperand.includes("#")) {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
                         return "ERRO: Imediato maior que o valor máximo (255)"
+                    }
+                    if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) < 0) {
+                        return "ERRO: Imediato tem que ser positivo"
                     }
                     operandsT16 = " " + vectorInst[1] + " " + vectorInst[1] + " " + vectorInst[2]
                 }
@@ -615,13 +694,11 @@ const isRegister = (operand: string, opcode: string) => {
     return false
 }
 
-let test1 = ThumbToArm("MOV R1, R13")
-let test2 = ThumbToArm("MOV R13, R2")
-let test3 = ThumbToArm("MOV R1, R2")
-let test4 = ThumbToArm("MOV SP, PC")
+let test1 = ThumbToArm("MOV R1, R2")
+let test2 = ThumbToArm("MOV R12, R2")
+let test3 = ThumbToArm("MOV R1, R12")
+let test4 = ThumbToArm("MOV R13, R12")
 
 console.log(test1 + "\n" + test2 + "\n" + test3 + "\n" + test4 + "\n")
 
-// OFFSET NEGATIVO ???? FAZER TESTES E ARRUMAR
-// MOV Rd, Rb before Thumb-2 only with one or both being Hi Registers
 export { }
