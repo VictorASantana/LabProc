@@ -3,7 +3,7 @@ let vectorCond = ["EQ", "NE", "CS", "HS", "CC", "LO", "MI", "PL", "VS", "VC", "H
 //rever isso, talvez tenha que ver em cada caso
 const shiftCodes = ["LSL", "LSR", "ASR", "ROR"];
 
-const instructions32to64 = {
+const instructions32to64 : { [nome: string]: string } = {
     "ADC": "ADC", //A64 não aceita imediato
     "ADD": "ADD",
     "AND": "AND",
@@ -34,14 +34,14 @@ const instructions32to64 = {
 
 //mapeando valores significativos de cada instrucao
 // (quantidade de operandos, a posicao dos registradores e a posicao da instrucao de shift )
-const partes_e_registradores = {
+const partes_e_registradores: { [nome: string]: [number[], number[][], number[]] } = {
     "ADC": [[3], [[1, 1, 1]], [0]], //A64 não aceita imediato
     "ADD": [[3, 3, 5, 5], [[1, 1, 1], [1, 1, 0], [1, 1, 0, 0, 0], [1, 1, 1, 0, 0]], [0, 0, 4, 4]],
     "AND": [[3, 3, 5], [[1, 1, 0], [1, 1, 1], [1, 1, 1, 0, 0]], [0, 0, 4]],
-    "B": [], //nao será utilizado, uma vez que deve ser com label ou com valores de pc
+    "B":   [[],[[]], []], //nao será utilizado, uma vez que deve ser com label ou com valores de pc
     "BIC": [[3, 5], [[1, 1, 1], [1, 1, 1, 0, 0]], [0, 4]], //A64 nao aceita imediato
-    "BL": [],
-    "BR": [[1], [[1]], [0]], //registrador tem que ser X, ou seja, precisa traduzir para X   
+    "BL":  [[],[[]], []],
+    "BR":  [[1], [[1]], [0]], //registrador tem que ser X, ou seja, precisa traduzir para X   
     "CMN": [[2, 4, 2, 4], [[1, 1], [1, 1, 0, 0], [1, 0], [1, 0, 0, 0]], [0, 0, 0, 0]],
     "CMP": [[2, 4, 2, 4], [[1, 1], [1, 1, 0, 0], [1, 0], [1, 0, 0, 0]], [0, 0, 0, 0]],
     "EOR": [[3, 5, 3], [[1, 1, 0], [1, 1, 1, 0, 0], [1, 1, 1]], [0, 4, 0]],
@@ -50,7 +50,7 @@ const partes_e_registradores = {
     // "LDRH"  :,
     // "LDRSB" :,
     // "LDRSH" :,
-    "MADD": [[4], [[1, 1, 1, 1]], [0]], //tem 4 regs
+    "MADD":[[4], [[1, 1, 1, 1]], [0]], //tem 4 regs
     "MOV": [[2, 2], [[1, 0], [1, 1]], [0, 0]],  //tem 2 parametro só
     "MUL": [[3], [[1, 1, 1]], [0]],
     "MVN": [[2, 4], [[1, 1], [1, 1, 0, 0]], [0, 3]],
@@ -64,7 +64,7 @@ const partes_e_registradores = {
 };
 
 export const A32ToA64 = (inst: string) => {
-    let vectorInst = inst.toUpperCase().split(' ');
+    let vectorInst: string[] = inst.toUpperCase().split(' ');
     const interOut = GetopcodeA64(vectorInst[0]);
 
     if (interOut === null)
@@ -74,10 +74,9 @@ export const A32ToA64 = (inst: string) => {
     let setSignal = interOut[1];
     let auxExtra = interOut[2];
     const nullVector = [0];
-    console.log(interOut)
 
-
-    let disposicaoRegsShift = verifyRegs(vectorInst, opcodeA64)
+    let disposicaoRegsShift = verifyRegs(vectorInst, opcodeA64);
+    console.log(disposicaoRegsShift)
     if (disposicaoRegsShift === null)
         return "Erro na disposição dos registradores para a tradução para A64";
 
@@ -136,7 +135,7 @@ const GetopcodeA64 = (opcodeA32: string) => {
     const condicionais_e_S = new RegExp(`^(${vectorCond.join('|')})S$`);
     let auxExtra = opcodeA32.slice(3);
     opcodeA32 = simplifyOpcodeA32(opcodeA32);
-    let interInstruction = instructions32to64[opcodeA32];
+    let interInstruction: string = instructions32to64[opcodeA32];
 
     if (condicionais_e_S.test(auxExtra))
         return [interInstruction, "S", auxExtra.slice(0, 2)];
@@ -155,6 +154,7 @@ const simplifyOpcodeA32 = (opcodeA32: string) => {
     let _loop_1 = function (i: number) {
         let auxSliced = opcodeA32.slice(0, i);
         let auxExtra = opcodeA32.slice(i);
+
         if (Object.keys(instructions32to64).some(function (x) { return x === auxSliced; }) && vectorCond.some(function (x) { return x === auxExtra || x + 'S' === auxExtra; })) {
             return { value: auxSliced };
         }
@@ -169,21 +169,35 @@ const simplifyOpcodeA32 = (opcodeA32: string) => {
 };
 
 const verifyRegs = (vectorInst: string[], opcodeA64: string) => {
-
+    let arrayInfos: [number[], number] = [[], 0];
     const infos_operandos = partes_e_registradores[opcodeA64];
-    console.log(infos_operandos)
-    if (infos_operandos.length === 0)
-        return [0]
+    console.log(infos_operandos.length)
+
+    if (infos_operandos[0].length === 0)
+        return arrayInfos;
 
     for (let i = 0; i < infos_operandos[0].length; i++) {
         if (vectorInst.length - 1 === infos_operandos[0][i]) {
             for (let j = 0; j < infos_operandos[0][i]; j++) {
-                if (/R(1[0-5]|[0-9])/.test(vectorInst[j + 1]) === infos_operandos[1][i][j]) { //verifica se true == 1 ou false == 0, significado se tem ou nao tem mesmo regs
-                    if (j + 1 === infos_operandos[0][i])
-                        return [infos_operandos[1][i], infos_operandos[2][i]];
+                if (/R(1[0-5]|[0-9])/.test(vectorInst[j + 1])) { 
+                    if(infos_operandos[1][i][j] === 1){
+                        if (j + 1 === infos_operandos[0][i]){
+                            arrayInfos = [infos_operandos[1][i], infos_operandos[2][i]]
+                            return arrayInfos
+                        }
+                    }
+                    else
+                        break;
                 }
                 else
-                    break;
+                    if (infos_operandos[1][i][j] === 0){
+                        if (j + 1 === infos_operandos[0][i]){
+                            arrayInfos = [infos_operandos[1][i], infos_operandos[2][i]]
+                            return arrayInfos
+                        }
+                    }
+                    else
+                        break;
             }
         }
     }
@@ -217,12 +231,10 @@ const instructionCond = (wholeInstruction: string, auxExtra: string) => {
     return structPadInstCond.replace("COND", auxExtra).replace("INSTRUCAO", wholeInstruction)
 }
 
-// let teste1 = A32ToA64("ADDEQS R0, R0, R0");
-// let teste2 = A32ToA64("MOVLE R1, R1");
+let teste1 = A32ToA64("ADDEQS R0, R0, R0");
+let teste2 = A32ToA64("MOVLE R1, R1");
 let teste3 = A32ToA64("STR R1, [R2, R4]!");
 
-// console.log(teste1 + "\n\n");
-// console.log(teste2 + "\n\n");
+console.log(teste1 + "\n\n");
+console.log(teste2 + "\n\n");
 console.log(teste3);
-
-export { }
