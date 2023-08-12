@@ -2,10 +2,10 @@ import React from 'react';
 import { BodyStyled, MainStyled, ButtonStyled, SectionStyled, SelectionStyled, SubTitleStyled, TitleStyled, InputStyled, ParagraphStyled } from './App.style';
 import { ArmToThumb } from './Arm32ToThumb16/A32toT16';
 import { ThumbToArm } from './Thumb16ToArm32/T16toA32';
-import { A32toA64 } from './Arm32toArm64/32to64';
+import { A32ToA64 } from './Arm32toArm64/32to64';
 
 function App() {
-  const [used, setUsed] = React.useState('')
+  const [used, setUsed] = React.useState('A32')
   const [text, setText] = React.useState('')
   const [arm, setARM] = React.useState<string[]>([])
   const [out, setOut] = React.useState<string[]>([])
@@ -17,6 +17,7 @@ function App() {
     for (let i = 0; i < a32.length; i++) {
       setOut((prev) => [...prev, ArmToThumb(a32[i]) + "\n"])
     }
+    translateToARM64(false)
   }
 
   const translateToARM = () => {
@@ -25,13 +26,16 @@ function App() {
     for (let i = 0; i < t16.length; i++) {
       setOut((prev) => [...prev, ThumbToArm(t16[i]) + "\n"])
     }
+    translateToARM64(true)
   }
 
-  const translateToARM64 = () => {
+  const translateToARM64 = (arm: boolean) => {
     setARM([])
-    const a32 = text.split("\n")
-    for (let i = 0; i < a32.length; i++) {
-      setOut((prev) => [...prev, A32toA64(a32[i]) + "\n"])
+    const a64 = arm ? out.toString().split("\n") : text.split("\n")
+    for (let i = 0; i < a64.length; i++) {
+      console.log(text)
+      console.log("Bulue: " + a64[i])
+      setARM((prev) => [...prev, A32ToA64(a64[i]) + "\n"])
     }
   }
 
