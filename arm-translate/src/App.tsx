@@ -2,9 +2,10 @@ import React from 'react';
 import { BodyStyled, MainStyled, ButtonStyled, SectionStyled, SelectionStyled, SubTitleStyled, TitleStyled, InputStyled, ParagraphStyled } from './App.style';
 import { ArmToThumb } from './Arm32ToThumb16/A32toT16';
 import { ThumbToArm } from './Thumb16ToArm32/T16toA32';
+import { A32ToA64 } from './Arm32toArm64/32to64';
 
 function App() {
-  const [used, setUsed] = React.useState('')
+  const [used, setUsed] = React.useState('A32')
   const [text, setText] = React.useState('')
   const [arm, setARM] = React.useState<string[]>([])
   const [out, setOut] = React.useState<string[]>([])
@@ -16,6 +17,7 @@ function App() {
     for (let i = 0; i < a32.length; i++) {
       setOut((prev) => [...prev, ArmToThumb(a32[i]) + "\n"])
     }
+    translateToARM64()
   }
 
   const translateToARM = () => {
@@ -23,6 +25,15 @@ function App() {
     const t16 = text.split("\n")
     for (let i = 0; i < t16.length; i++) {
       setOut((prev) => [...prev, ThumbToArm(t16[i]) + "\n"])
+    }
+  }
+
+  const translateToARM64 = () => {
+    setARM([])
+    const a64 = text.split("\n")
+    for (let i = 0; i < a64.length; i++) {
+      let actual = A32ToA64(a64[i])
+      setARM((prev) => [...prev, actual + "\n"])
     }
   }
 
