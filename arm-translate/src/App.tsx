@@ -17,7 +17,7 @@ function App() {
     for (let i = 0; i < a32.length; i++) {
       setOut((prev) => [...prev, ArmToThumb(a32[i]) + "\n"])
     }
-    translateToARM64(false)
+    translateToARM64()
   }
 
   const translateToARM = () => {
@@ -26,16 +26,14 @@ function App() {
     for (let i = 0; i < t16.length; i++) {
       setOut((prev) => [...prev, ThumbToArm(t16[i]) + "\n"])
     }
-    translateToARM64(true)
   }
 
-  const translateToARM64 = (arm: boolean) => {
+  const translateToARM64 = () => {
     setARM([])
-    const a64 = arm ? out.toString().split("\n") : text.split("\n")
+    const a64 = text.split("\n")
     for (let i = 0; i < a64.length; i++) {
-      console.log(text)
-      console.log("Bulue: " + a64[i])
-      setARM((prev) => [...prev, A32ToA64(a64[i]) + "\n"])
+      let actual = A32ToA64(a64[i])
+      setARM((prev) => [...prev, actual + "\n"])
     }
   }
 

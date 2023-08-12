@@ -90,13 +90,13 @@ export const A32ToA64 = (inst: string) => {
                 opcodeA64 = opcodeA64 + "." + auxExtra + " ";
             if (vectorInst.length === 2)
                 return opcodeA64 + " " + vectorInst[1];
-            return null;
+            return "null";
         case "BR":
             if (vectorInst.length === 2 && auxExtra !== "")
                 return instructionCond(opcodeA64 + " " + vectorInst[1], auxExtra)
             else if (vectorInst.length === 2)
                 return opcodeA64 + " " + vectorInst[1]
-            return null
+            return "null"
         case "STR":
         case "LDR": //registrador precisa ser X
             vectorInst[2] = vectorInst[2].replace("R", "X")
