@@ -6,7 +6,8 @@ Emilly da Silva Arcanjo - 11808105 <br />
 Thiago Moreira Yanitchkis Couto - 11804081 <br />
 Victor de Almeida Santana - 11806718
 
-### Rodando o projeto 
+### Rodando o projeto
+Entre no diretório do projeto: `cd arm-translate` <br />
 As dependências necessárias podem ser instaladas via comando: `npm install` <br />
 Para rodar a interface, uma vez instaladas as dependências: `npm start`
 
