@@ -111,12 +111,12 @@ export const A32ToA64 = (inst: string) => {
                     return "Operação shift inválida para A64, não é permitido o \"" + vectorInst[4] + "\""
             break;
         case "MRS":
-            vectorInst[2] = vectorInst[2].replace("R", "X");
-            vectorInst[1] = "NZCV,"
+            vectorInst[1] = vectorInst[1].replace("R", "X");
+            vectorInst[2] = "NZCV"
             break;
         case "MSR":
-            vectorInst[2] = "NZCV"
-            vectorInst[1] = vectorInst[1].replace("R", "X") + ",";
+            vectorInst[1] = "NZCV,"
+            vectorInst[2] = vectorInst[2].replace("R", "X");
             break;
         case "ADD":
         case "SUB":
@@ -255,7 +255,7 @@ const instructionCond = (wholeInstruction: string, auxExtra: string) => {
     return structPadInstCond.replace(/REGISTRADOR/g, tempReg).replace("COND", auxExtra).replace("INSTRUCAO", wholeInstruction);
 }
 
-let teste1 = A32ToA64("mrs r0, cpsr");
+let teste1 = A32ToA64("msr cpsr, r0");
 
 console.log(teste1 + "\n\n");
 
