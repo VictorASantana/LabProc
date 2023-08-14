@@ -153,7 +153,7 @@ const GetopcodeA64 = (opcodeA32: string) => {
     if (condicionais_e_S.test(auxExtra))
         return [interInstruction, "S", auxExtra.slice(0, 2)];
 
-    if (interInstruction !== "") {
+    if (!(interInstruction == null)) {
         if (auxExtra === "S") //values
             return [interInstruction, "S", auxExtra];
         else
@@ -184,7 +184,6 @@ const simplifyOpcodeA32 = (opcodeA32: string) => {
 const verifyRegs = (vectorInst: string[], opcodeA64: string) => {
     let arrayInfos: [number[], number] = [[], 0];
     const infos_operandos = partes_e_registradores[opcodeA64];
-    console.log(infos_operandos.length)
 
     if (infos_operandos[0].length === 0)
         return arrayInfos;
@@ -250,21 +249,8 @@ const instructionCond = (wholeInstruction: string, auxExtra: string) => {
     return structPadInstCond.replace(/REGISTRADOR/g, tempReg).replace("COND", auxExtra).replace("INSTRUCAO", wholeInstruction);
 }
 
-let teste1 = A32ToA64("ADDEQ R0, R1, R2");
-// let teste2 = A32ToA64("MOVLE R1, R1");
-// // let teste3 = A32ToA64("STR R1, [R2, R4]!");
+let teste1 = A32ToA64("MRC p15, 0, r1, c0, c0, #0");
 
 console.log(teste1 + "\n\n");
-// console.log(teste2 + "\n\n");
-// console.log(teste3);
 
 
-/* Instruçoes que faltam
- - instrucoes condicionais (Tipo ADDEQ R1, R2, R3 ficaria: ADD R4, R2, R3 \nCSEL R1, R4, R1, EQ)
- ADD R4, R2, R3 
- CSEL R1, R4, R1, EQ
-
-
- ADD RX, R2, R3
- CSEL R1, RX, R1, EQ
-*/
