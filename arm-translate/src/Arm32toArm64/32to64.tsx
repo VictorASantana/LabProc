@@ -76,11 +76,11 @@ export const A32ToA64 = (inst: string) => {
     let disposicaoRegsShift = verifyRegs(vectorInst, opcodeA64);
 
     if (disposicaoRegsShift === null)
-        return "Erro na disposição dos registradores para a tradução para A64";
+        return "Erro na disposição dos registradores e imediatos para a tradução";
 
     let shiftCorrect = verifyShift(vectorInst, disposicaoRegsShift[1])
     if (!shiftCorrect && disposicaoRegsShift === nullVector)
-        return "Erro no Barrel Shift para a tradução para A64"
+        return "Erro no Barrel Shift para a tradução"
 
     // let operandsA64 = inst.slice(vectorInst[0].length);
 
@@ -90,13 +90,13 @@ export const A32ToA64 = (inst: string) => {
                 opcodeA64 = opcodeA64 + "." + auxExtra + " ";
             if (vectorInst.length === 2)
                 return opcodeA64 + " " + vectorInst[1];
-            return null;
+            return "Não foi possível converter a instrução";
         case "BR":
             if (vectorInst.length === 2 && auxExtra !== "")
-                return instructionCond(opcodeA64 + " " + vectorInst[1], auxExtra)
+                return instructionCond(opcodeA64 + " " + vectorInst[1], auxExtra, vectorInst[1] )
             else if (vectorInst.length === 2)
                 return opcodeA64 + " " + vectorInst[1]
-            return null
+            return "Não foi possível converter a instrução";
         case "STR":
         case "LDR": //registrador precisa ser X
             vectorInst[2] = vectorInst[2].replace("R", "X")
@@ -114,7 +114,7 @@ export const A32ToA64 = (inst: string) => {
             break;
         case "ADD":
         case "SUB":
-            if (disposicaoRegsShift[1] != 0){
+            if (disposicaoRegsShift[1] !== 0){
                 if(vectorInst[disposicaoRegsShift[1]] === "ROR")
                     return "Não existe o ROR nessas instruções"
             }
@@ -126,7 +126,7 @@ export const A32ToA64 = (inst: string) => {
     let wholeInstruction = treatRegistors(opcodeA64, setSignal, vectorInst, disposicaoRegsShift[0]);
 
     if (auxExtra !== "" && auxExtra !== "S")
-        wholeInstruction = instructionCond(wholeInstruction, auxExtra)
+        wholeInstruction = instructionCond(wholeInstruction, auxExtra, vectorInst[1])
 
     return wholeInstruction;
 };
@@ -239,12 +239,15 @@ const treatRegistors = (opcodeA64: string, setSignal: string, vectorInst: string
     return tudaoInstruction;
 };
 
-const instructionCond = (wholeInstruction: string, auxExtra: string) => {
-    const structPadInstCond = "B.COND branch \nexit: \n\tB exit \nbranch: \n\tINSTRUCAO \n\tB exit\n*essa é uma alternativa, existem outras válidas";
-    return structPadInstCond.replace("COND", auxExtra).replace("INSTRUCAO", wholeInstruction)
+const instructionCond = (wholeInstruction: string, auxExtra: string, registradorDestino: string) => {
+    // const structPadInstCond = "B.COND branch \nexit: \n\tB exit \nbranch: \n\tINSTRUCAO \n\tB exit\n*essa é uma alternativas, a instrução M";
+    let structPadInstCond = "MOV Wt, REGISTRADOR \nINSTRUCAO\nCSEL REGISTRADOR, REGISTRADOR, Wt, COND\n*Wt é qualquer registrador que não está sendo utilizado\n**essa é apenas uma das possibilidades";
+    registradorDestino = registradorDestino.replace(/,/g, "").replace("R", "W")
+    console.log(registradorDestino)
+    return structPadInstCond.replace(/REGISTRADOR/g, registradorDestino).replace("COND", auxExtra).replace("INSTRUCAO", wholeInstruction);
 }
 
-let teste1 = A32ToA64("BEQ label");
+let teste1 = A32ToA64("MOVEQ R0, R1");
 // let teste2 = A32ToA64("MOVLE R1, R1");
 // // let teste3 = A32ToA64("STR R1, [R2, R4]!");
 
@@ -254,6 +257,11 @@ console.log(teste1 + "\n\n");
 
 
 /* Instruçoes que faltam
- - instrucao de shift como pseudo instrucao (LSL R1, R2, #1 e LSL R1, R2, R3)
  - instrucoes condicionais (Tipo ADDEQ R1, R2, R3 ficaria: ADD R4, R2, R3 \nCSEL R1, R4, R1, EQ)
+ ADD R4, R2, R3 
+ CSEL R1, R4, R1, EQ
+
+ MOV RX, R1
+ ADD R1, R2, R3
+ CSEL R1, R1, RX, EQ
 */
