@@ -95,7 +95,7 @@ export const A32ToA64 = (inst: string) => {
             if (vectorInst.length === 2 && auxExtra !== "")
                 return instructionCond(opcodeA64 + " " + vectorInst[1], auxExtra)
             else if (vectorInst.length === 2)
-                return opcodeA64 + " " + vectorInst[1]
+                return opcodeA64 + " " + vectorInst[1].replace("R", "W")
             return "Não foi possível converter a instrução";
         case "BL":
             if (vectorInst.length === 2 && auxExtra !== "")
@@ -255,7 +255,7 @@ const instructionCond = (wholeInstruction: string, auxExtra: string) => {
     return structPadInstCond.replace(/REGISTRADOR/g, tempReg).replace("COND", auxExtra).replace("INSTRUCAO", wholeInstruction);
 }
 
-let teste1 = A32ToA64("msr cpsr, r0");
+let teste1 = A32ToA64("BX R4");
 
 console.log(teste1 + "\n\n");
 
