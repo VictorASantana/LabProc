@@ -1,5 +1,4 @@
 let matrixT16 = [["ADC", "ADD", "AND", "B", "BIC", "BL", "BX", "CMN", "CMP", "EOR", "LDMIA", "LDR", "LDRB", "LDRH", "LDSB", "LDSH", "MOV", "MUL", "MVN", "NEG", "ORR", "POP", "PUSH", "SBC", "STMIA", "STR", "STRB", "STRH", "SWI", "SUB", "TST", "ASR", "LSL", "LSR"], [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 16, 17, 18, 21, 25, 26, 28, 27, 13, 32, 30, 32, 33, 34, 35, 37, 36, 40]]
-let vectorA32 = ["UND", "ADC", "ADD", "AND", "B", "BIC", "BL", "BX", "CDP", "CMN", "CMP", "EOR", "LDC", "LDM", "LDR", "LDRB", "LDRH", "LDRSB", "LDRSH", "MCR", "MLA", "MOV", "MRC", "MRS", "MSR", "MUL", "MVN", "ORR", "RSB", "RSC", "SBC", "STC", "STM", "STR", "STRB", "STRH", "SUB", "SWI", "SWP", "TEQ", "TST"]
 
 export const ThumbToArm = (inst: string) => {
     inst = inst.toUpperCase()
@@ -12,7 +11,7 @@ export const ThumbToArm = (inst: string) => {
 
     switch (opcodeT16) {
         case "ADC":
-            if (vectorInst.length != 3 || !isRegister(vectorInst[1], opcodeT16) || !isRegister(vectorInst[2], opcodeT16)) {
+            if (vectorInst.length !== 3 || !isRegister(vectorInst[1], opcodeT16) || !isRegister(vectorInst[2], opcodeT16)) {
                 return "ERRO: Formato não suportado / Formato esperado: ADC Rd, Rs"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -23,7 +22,7 @@ export const ThumbToArm = (inst: string) => {
             break;
         case "ADD":
             // Casos com 3 operandos
-            if (vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16)) {
+            if (vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16)) {
                 // Último operando é imediato/offset
                 if (lastOperand.includes("#")) {
                     if (hasHighRegisterThumb(vectorInst[1], false)) {
@@ -66,7 +65,7 @@ export const ThumbToArm = (inst: string) => {
             }
             else {
                 // Casos com 2 operandos
-                if (vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16)) {
+                if (vectorInst.length === 3 && isRegister(vectorInst[1], opcodeT16)) {
                     // Último operando é imediato/offset
                     if (lastOperand.includes("#")) {
                         // O operando é Lo register
@@ -87,7 +86,7 @@ export const ThumbToArm = (inst: string) => {
                                     return "ERRO: Imediato maior que o valor máximo (127)"
                                 }
                                 // Imediato positivo
-                                if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 0 || parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) == 0) {
+                                if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 0 || parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) === 0) {
                                     opcodeT16 = "ADD"
                                     operandsT16 = " " + vectorInst[1] + " " + vectorInst[1] + " " + vectorInst[2]
                                 }
@@ -120,7 +119,7 @@ export const ThumbToArm = (inst: string) => {
             }
             break;
         case "AND":
-            if (vectorInst.length != 3 || !isRegister(vectorInst[1], opcodeT16) || !isRegister(vectorInst[2], opcodeT16)) {
+            if (vectorInst.length !== 3 || !isRegister(vectorInst[1], opcodeT16) || !isRegister(vectorInst[2], opcodeT16)) {
                 return "ERRO: Formato não suportado / Formato esperado: AND Rd, Rs"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -130,12 +129,12 @@ export const ThumbToArm = (inst: string) => {
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[1] + ' ' + vectorInst[2]
             break;
         case "ASR":
-            if (vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16)) {
+            if (vectorInst.length === 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16)) {
                 opcodeT16 = "MOVS"
                 operandsT16 = " " + vectorInst[1] + " " + vectorInst[1] + " ASR " + vectorInst[2]
             }
             else {
-                if (vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16) && vectorInst[3].includes("#")) {
+                if (vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16) && vectorInst[3].includes("#")) {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
                         return "ERRO: Imediato maior que o valor máximo (31)"
                     }
@@ -155,12 +154,12 @@ export const ThumbToArm = (inst: string) => {
             break;
         case "B":
             // Caso de OPCODE ser não condicional (B)
-            if (vectorInst[0] === "B" && vectorInst.length == 2 && !isRegister(vectorInst[1], opcodeT16)) {
+            if (vectorInst[0] === "B" && vectorInst.length === 2 && !isRegister(vectorInst[1], opcodeT16)) {
                 opcodeT16 = "BAL"
             }
             else {
                 // Branch condicional
-                if (vectorInst[0] !== "B" && vectorInst.length == 2 && !isRegister(vectorInst[1], opcodeT16)) {
+                if (vectorInst[0] !== "B" && vectorInst.length === 2 && !isRegister(vectorInst[1], opcodeT16)) {
                     opcodeT16 = vectorInst[0]
                 }
                 else {
@@ -169,7 +168,7 @@ export const ThumbToArm = (inst: string) => {
             }
             break;
         case "BIC":
-            if (vectorInst.length != 3 || !isRegister(vectorInst[1], opcodeT16) || !isRegister(vectorInst[2], opcodeT16)) {
+            if (vectorInst.length !== 3 || !isRegister(vectorInst[1], opcodeT16) || !isRegister(vectorInst[2], opcodeT16)) {
                 return "ERRO: Formato não suportado / Formato esperado: BIC Rd, Rs"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -179,17 +178,17 @@ export const ThumbToArm = (inst: string) => {
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[1] + ' ' + vectorInst[2]
             break;
         case "BL":
-            if (vectorInst.length != 2 || isRegister(vectorInst[1], opcodeT16)) {
+            if (vectorInst.length !== 2 || isRegister(vectorInst[1], opcodeT16)) {
                 return "ERRO: Formato não suportado / Formato esperado: BL label"
             }
             break;
         case "BX":
-            if (vectorInst.length != 2 || !isRegister(vectorInst[1], opcodeT16)) {
+            if (vectorInst.length !== 2 || !isRegister(vectorInst[1], opcodeT16)) {
                 return "ERRO: Formato não suportado / Formato esperado: BX Rs"
             }
             break;
         case "CMN":
-            if (vectorInst.length != 3 || !isRegister(vectorInst[1], opcodeT16) || !isRegister(vectorInst[2], opcodeT16)) {
+            if (vectorInst.length !== 3 || !isRegister(vectorInst[1], opcodeT16) || !isRegister(vectorInst[2], opcodeT16)) {
                 return "ERRO: Formato não suportado / Formato esperado: CMN Rd, Rs"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -197,7 +196,7 @@ export const ThumbToArm = (inst: string) => {
             }
             break;
         case "CMP":
-            if (vectorInst.length != 3 || !isRegister(vectorInst[1], opcodeT16) || !(isRegister(vectorInst[2], opcodeT16) || lastOperand.includes("#"))) {
+            if (vectorInst.length !== 3 || !isRegister(vectorInst[1], opcodeT16) || !(isRegister(vectorInst[2], opcodeT16) || lastOperand.includes("#"))) {
                 return "ERRO: Formato não suportado / Formato esperado: CMP Rd, Rs | CMP Rd, #Offset8"
             }
             if (lastOperand.includes("#")) {
@@ -213,7 +212,7 @@ export const ThumbToArm = (inst: string) => {
             }
             break;
         case "EOR":
-            if (vectorInst.length != 3 || !isRegister(vectorInst[1], opcodeT16) || !isRegister(vectorInst[2], opcodeT16)) {
+            if (vectorInst.length !== 3 || !isRegister(vectorInst[1], opcodeT16) || !isRegister(vectorInst[2], opcodeT16)) {
                 return "ERRO: Formato não suportado / Formato esperado: EOR Rd, Rs"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -223,7 +222,7 @@ export const ThumbToArm = (inst: string) => {
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[1] + ' ' + vectorInst[2]
             break;
         case "LDMIA":
-            if (!(isRegister(vectorInst[1], opcodeT16) && vectorInst[1].slice(vectorInst[1].length - 2, vectorInst[1].length - 1) == "!" && vectorInst[2].includes("{") && vectorInst[vectorInst.length - 1].includes("}"))) {
+            if (!(isRegister(vectorInst[1], opcodeT16) && vectorInst[1].slice(vectorInst[1].length - 2, vectorInst[1].length - 1) === "!" && vectorInst[2].includes("{") && vectorInst[vectorInst.length - 1].includes("}"))) {
                 return "ERRO: Formato não suportado / Formato esperado: LDMIA Rb!, { Rlist }"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -232,7 +231,7 @@ export const ThumbToArm = (inst: string) => {
             break;
         case "LDR":
             // Confere disposição da instrução
-            if (!(vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
+            if (!(vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: LDR Rd, [Rb, Ro] | LDR Rd, [Rb, #Imm]"
             }
             // Confere primeiro registrador
@@ -273,7 +272,7 @@ export const ThumbToArm = (inst: string) => {
             break;
         case "LDRB":
             // Confere disposição da instrução
-            if (!(vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
+            if (!(vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: LDRB Rd, [Rb, Ro] | LDRB Rd, [Rb, #Imm]"
             }
             // Confere high register
@@ -297,7 +296,7 @@ export const ThumbToArm = (inst: string) => {
             break;
         case "LDRH":
             // Confere disposição da instrução
-            if (!(vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
+            if (!(vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: LDRH Rd, [Rb, Ro] | LDRH Rd, [Rb, #Imm]"
             }
             // Confere high register
@@ -320,12 +319,12 @@ export const ThumbToArm = (inst: string) => {
             }
             break;
         case "LSL":
-            if (vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16)) {
+            if (vectorInst.length === 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16)) {
                 opcodeT16 = "MOVS"
                 operandsT16 = " " + vectorInst[1] + " " + vectorInst[1] + " LSL " + vectorInst[2]
             }
             else {
-                if (vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16) && vectorInst[3].includes("#")) {
+                if (vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16) && vectorInst[3].includes("#")) {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
                         return "ERRO: Imediato maior que o valor máximo (31)"
                     }
@@ -344,7 +343,7 @@ export const ThumbToArm = (inst: string) => {
             }
             break;
         case "LDSB":
-            if (!(vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2].slice(1), opcodeT16) && isRegister(vectorInst[3].slice(0, vectorInst[3].length - 1), opcodeT16))) {
+            if (!(vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2].slice(1), opcodeT16) && isRegister(vectorInst[3].slice(0, vectorInst[3].length - 1), opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: LDSB Rd, [Rb, Ro]"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -353,7 +352,7 @@ export const ThumbToArm = (inst: string) => {
             opcodeT16 = "LDRSB"
             break;
         case "LDSH":
-            if (!(vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2].slice(1), opcodeT16) && isRegister(vectorInst[3].slice(0, vectorInst[3].length - 1), opcodeT16))) {
+            if (!(vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2].slice(1), opcodeT16) && isRegister(vectorInst[3].slice(0, vectorInst[3].length - 1), opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: LDSH Rd, [Rb, Ro]"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -362,12 +361,12 @@ export const ThumbToArm = (inst: string) => {
             opcodeT16 = "LDRSH"
             break;
         case "LSR":
-            if (vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16)) {
+            if (vectorInst.length === 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16)) {
                 opcodeT16 = "MOVS"
                 operandsT16 = " " + vectorInst[1] + " " + vectorInst[1] + " LSR " + vectorInst[2]
             }
             else {
-                if (vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16) && vectorInst[3].includes("#")) {
+                if (vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16) && vectorInst[3].includes("#")) {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 31) {
                         return "ERRO: Imediato maior que o valor máximo (31)"
                     }
@@ -387,7 +386,7 @@ export const ThumbToArm = (inst: string) => {
             break;
         case "MOV":
             // Um registrador e um offset como operandos
-            if (vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("#")) {
+            if (vectorInst.length === 3 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("#")) {
                 if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
                     return "ERRO: Imediato maior que o valor máximo (255)"
                 }
@@ -410,7 +409,7 @@ export const ThumbToArm = (inst: string) => {
             }
             break;
         case "MUL":
-            if (!(vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16))) {
+            if (!(vectorInst.length === 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: MUL Rd, Rs"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -420,7 +419,7 @@ export const ThumbToArm = (inst: string) => {
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[1] + ' ' + vectorInst[2]
             break;
         case "MVN":
-            if (!(vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16))) {
+            if (!(vectorInst.length === 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: MVN Rd, Rs"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -429,7 +428,7 @@ export const ThumbToArm = (inst: string) => {
             opcodeT16 = opcodeT16 + "S"
             break;
         case "NEG":
-            if (!(vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16))) {
+            if (!(vectorInst.length === 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: NEG Rd, Rs"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -439,7 +438,7 @@ export const ThumbToArm = (inst: string) => {
             operandsT16 = ' ' + vectorInst[1] + ' ' + vectorInst[2] + ", #0"
             break;
         case "ORR":
-            if (!(vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16))) {
+            if (!(vectorInst.length === 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: ORR Rd, Rs"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -489,7 +488,7 @@ export const ThumbToArm = (inst: string) => {
             operandsT16 = " " + vectorInst[1] + " " + vectorInst[1] + " " + vectorInst[2]
             break;
         case "STMIA":
-            if (!(isRegister(vectorInst[1], opcodeT16) && vectorInst[1].slice(vectorInst[1].length - 2, vectorInst[1].length - 1) == "!" && vectorInst[2].includes("{") && vectorInst[vectorInst.length - 1].includes("}"))) {
+            if (!(isRegister(vectorInst[1], opcodeT16) && vectorInst[1].slice(vectorInst[1].length - 2, vectorInst[1].length - 1) === "!" && vectorInst[2].includes("{") && vectorInst[vectorInst.length - 1].includes("}"))) {
                 return "ERRO: Formato não suportado / Formato esperado: STMIA Rb!, { Rlist }"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -498,7 +497,7 @@ export const ThumbToArm = (inst: string) => {
             break;
         case "STR":
             // Confere disposição da instrução
-            if (!(vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
+            if (!(vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: STR Rd, [Rb, Ro] | STR Rd, [Rb, #Imm]"
             }
             // Confere primeiro registrador
@@ -539,7 +538,7 @@ export const ThumbToArm = (inst: string) => {
             break;
         case "STRB":
             // Confere disposição da instrução
-            if (!(vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
+            if (!(vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: STRB Rd, [Rb, Ro] | STRB Rd, [Rb, #Imm]"
             }
             // Confere high register
@@ -563,7 +562,7 @@ export const ThumbToArm = (inst: string) => {
             break;
         case "STRH":
             // Confere disposição da instrução
-            if (!(vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
+            if (!(vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && vectorInst[2].includes("[") && vectorInst[3].includes("]") && isRegister(vectorInst[2].slice(1), opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: STRH Rd, [Rb, Ro] | STRH Rd, [Rb, #Imm]"
             }
             // Confere high register
@@ -586,7 +585,7 @@ export const ThumbToArm = (inst: string) => {
             }
             break;
         case "SWI":
-            if (!(vectorInst.length == 2 && parseInt(vectorInst[1]))) {
+            if (!(vectorInst.length === 2 && parseInt(vectorInst[1]))) {
                 return "ERRO: Formato não suportado / Formato esperado: SWI Value8"
             }
             if (parseInt(vectorInst[1]) > 255) {
@@ -595,7 +594,7 @@ export const ThumbToArm = (inst: string) => {
             break;
         case "SUB":
             // Os casos com 3 operandos
-            if (vectorInst.length == 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16)) {
+            if (vectorInst.length === 4 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16)) {
                 // Se tiver imediato
                 if (lastOperand.includes("#")) {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 7) {
@@ -614,7 +613,7 @@ export const ThumbToArm = (inst: string) => {
             }
             else {
                 // O caso com 2 operandos (Rd e #Offset8)
-                if (vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && lastOperand.includes("#")) {
+                if (vectorInst.length === 3 && isRegister(vectorInst[1], opcodeT16) && lastOperand.includes("#")) {
                     if (parseInt(lastOperand.slice(lastOperand.indexOf("#") + 1)) > 255) {
                         return "ERRO: Imediato maior que o valor máximo (255)"
                     }
@@ -634,7 +633,7 @@ export const ThumbToArm = (inst: string) => {
             opcodeT16 = "SUBS"
             break;
         case "TST":
-            if (!(vectorInst.length == 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16))) {
+            if (!(vectorInst.length === 3 && isRegister(vectorInst[1], opcodeT16) && isRegister(vectorInst[2], opcodeT16))) {
                 return "ERRO: Formato não suportado / Formato esperado: TST Rd, Rs"
             }
             if (hasHighRegisterThumb(operandsT16, false)) {
@@ -684,7 +683,7 @@ const hasHighRegisterThumb = (operands: string, specialFlag: boolean) => {
 
 const isRegister = (operand: string, opcode: string) => {
     let firstChar = operand.slice(0, 1)
-    let extraLength = (operand.includes("!") && (opcode == "LDMIA" || opcode == "STMIA")) ? operand.indexOf("!") : (operand.includes(",") ? operand.indexOf(",") : operand.length)
+    let extraLength = (operand.includes("!") && (opcode === "LDMIA" || opcode === "STMIA")) ? operand.indexOf("!") : (operand.includes(",") ? operand.indexOf(",") : operand.length)
     let extraChars = operand.slice(1, extraLength)
 
     if ((firstChar === "R" && Number(extraChars) >= 0 && Number(extraChars) <= 15) || firstChar + extraChars === "SP" || firstChar + extraChars === "LR" || firstChar + extraChars === "PC") {
