@@ -111,12 +111,12 @@ export const A32ToA64 = (inst: string) => {
                     return "Operação shift inválida para A64, não é permitido o \"" + vectorInst[4] + "\""
             break;
         case "MRS":
-            vectorInst[1] = vectorInst[2].replace("R", "X");
-            vectorInst[2] = "NZCV"
+            vectorInst[2] = vectorInst[2].replace("R", "X");
+            vectorInst[1] = "NZCV"
             break;
         case "MSR":
-            vectorInst[1] = "NZCV"
-            vectorInst[2] = vectorInst[2].replace("R", "X");
+            vectorInst[2] = "NZCV"
+            vectorInst[1] = vectorInst[1].replace("R", "X");
             break;
         case "ADD":
         case "SUB":
