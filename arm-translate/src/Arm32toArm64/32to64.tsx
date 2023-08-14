@@ -44,12 +44,12 @@ const partes_e_registradores: { [nome: string]: [number[], number[][], number[]]
     "CMN": [[2, 4, 2, 4], [[1, 1], [1, 1, 0, 0], [1, 0], [1, 0, 0, 0]], [0, 0, 0, 0]],
     "CMP": [[2, 4, 2, 4], [[1, 1], [1, 1, 0, 0], [1, 0], [1, 0, 0, 0]], [0, 0, 0, 0]],
     "EOR": [[3, 5, 3], [[1, 1, 0], [1, 1, 1, 0, 0], [1, 1, 1]], [0, 4, 0]],
-    "LDR": [[3, 2, 3, 5], [[1, 1, 0], [1, 0], [1, 1, 1], [1, 1, 1, 0, 0]], [0, 0, 0, 4]],
+    "LDR": [[3, 2, 3, 5, 2], [[1, 1, 0], [1, 0], [1, 1, 1], [1, 1, 1, 0, 0], [1, 1]], [0, 0, 0, 4, 0]],
     "MADD":[[4], [[1, 1, 1, 1]], [0]], 
     "MOV": [[2, 2], [[1, 0], [1, 1]], [0, 0]],  
     "MUL": [[3], [[1, 1, 1]], [0]],
-    "MRS": [[2], [[0, 1]], [0]],
-    "MSR": [[2], [[1, 0]], [0]],
+    "MRS": [[2], [[1, 0]], [0]],
+    "MSR": [[2], [[0, 1]], [0]],
     "MVN": [[2, 4], [[1, 1], [1, 1, 0, 0]], [0, 3]],
     "ORR": [[3, 5], [[1, 1, 0], [1, 1, 1, 0, 0]], [0, 4]],
     "SBC": [[3], [[1, 1, 1]], [0]], 
@@ -62,7 +62,7 @@ const partes_e_registradores: { [nome: string]: [number[], number[][], number[]]
 Função princial
 */
 export const A32ToA64 = (inst: string) => {
-    let vectorInst: string[] = inst.toUpperCase().split(' ');
+    let vectorInst: string[] = inst.toUpperCase().trim().split(' ');
     const interOut = GetopcodeA64(vectorInst[0]);
 
     if (interOut === null)
@@ -96,6 +96,12 @@ export const A32ToA64 = (inst: string) => {
                 return instructionCond(opcodeA64 + " " + vectorInst[1], auxExtra)
             else if (vectorInst.length === 2)
                 return opcodeA64 + " " + vectorInst[1]
+            return "Não foi possível converter a instrução";
+        case "BL":
+            if (vectorInst.length === 2 && auxExtra !== "")
+                return instructionCond(opcodeA64 + " " + vectorInst[1], auxExtra)
+            else if (vectorInst.length === 2)
+                return opcodeA64 + " " + vectorInst[1].replace("R", "W")
             return "Não foi possível converter a instrução";
         case "STR":
         case "LDR": //registrador precisa ser X
@@ -249,7 +255,7 @@ const instructionCond = (wholeInstruction: string, auxExtra: string) => {
     return structPadInstCond.replace(/REGISTRADOR/g, tempReg).replace("COND", auxExtra).replace("INSTRUCAO", wholeInstruction);
 }
 
-let teste1 = A32ToA64("MRC p15, 0, r1, c0, c0, #0");
+let teste1 = A32ToA64("mrs r0, cpsr");
 
 console.log(teste1 + "\n\n");
 
