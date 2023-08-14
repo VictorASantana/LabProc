@@ -32,8 +32,9 @@ function App() {
     setARM([])
     const a64 = text.split("\n")
     for (let i = 0; i < a64.length; i++) {
-      let actual = A32ToA64(a64[i])
-      setARM((prev) => [...prev, actual + "\n"])
+      let actual = A32ToA64(a64[i]).split("\n")
+      for(let j = 0; j <actual.length;j++)
+        setARM((prev) => [...prev, actual[j] + "\n"])
     }
   }
 
@@ -57,10 +58,10 @@ function App() {
           <SubTitleStyled>{used === architecture[1] ? architecture[0] : architecture[1]}</SubTitleStyled>
           {out.map((instr) => (
             <>
-              <ParagraphStyled>{instr}</ParagraphStyled >
+              <ParagraphStyled>{instr.split("\n")}</ParagraphStyled >
               <br />
             </>
-          ))}
+          ))} 
           <SubTitleStyled>{"A64"}</SubTitleStyled>
           {arm.map((instr) => (
             <>
