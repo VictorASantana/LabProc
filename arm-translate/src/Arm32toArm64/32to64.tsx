@@ -93,7 +93,7 @@ export const A32ToA64 = (inst: string) => {
             return "Não foi possível converter a instrução";
         case "BR":
             if (vectorInst.length === 2 && auxExtra !== "")
-                return instructionCond(opcodeA64 + " " + vectorInst[1], auxExtra, vectorInst[1] )
+                return instructionCond(opcodeA64 + " " + vectorInst[1], auxExtra)
             else if (vectorInst.length === 2)
                 return opcodeA64 + " " + vectorInst[1]
             return "Não foi possível converter a instrução";
@@ -126,7 +126,7 @@ export const A32ToA64 = (inst: string) => {
     let wholeInstruction = treatRegistors(opcodeA64, setSignal, vectorInst, disposicaoRegsShift[0]);
 
     if (auxExtra !== "" && auxExtra !== "S")
-        wholeInstruction = instructionCond(wholeInstruction, auxExtra, vectorInst[1])
+        wholeInstruction = instructionCond(wholeInstruction, auxExtra)
 
     return wholeInstruction;
 };
@@ -239,15 +239,18 @@ const treatRegistors = (opcodeA64: string, setSignal: string, vectorInst: string
     return tudaoInstruction;
 };
 
-const instructionCond = (wholeInstruction: string, auxExtra: string, registradorDestino: string) => {
-    // const structPadInstCond = "B.COND branch \nexit: \n\tB exit \nbranch: \n\tINSTRUCAO \n\tB exit\n*essa é uma alternativas, a instrução M";
-    let structPadInstCond = "MOV Wt, REGISTRADOR \nINSTRUCAO\nCSEL REGISTRADOR, REGISTRADOR, Wt, COND\n*Wt é qualquer registrador que não está sendo utilizado\n**essa é apenas uma das possibilidades";
-    registradorDestino = registradorDestino.replace(/,/g, "").replace("R", "W")
-    console.log(registradorDestino)
-    return structPadInstCond.replace(/REGISTRADOR/g, registradorDestino).replace("COND", auxExtra).replace("INSTRUCAO", wholeInstruction);
+const instructionCond = (wholeInstruction: string, auxExtra: string) => {
+    let structPadInstCond = "INSTRUCAO\nCSEL REGISTRADOR, Wt, REGISTRADOR, COND\n*Wt é qualquer registrador que não está sendo utilizado\n**essa é apenas uma das possibilidades";
+    
+    let splitInstrcution = wholeInstruction.split(" ");
+    let tempReg = splitInstrcution[1].replace(/,/g, "");
+    splitInstrcution[1] = "Wt,"
+    wholeInstruction = splitInstrcution.join(" ")
+
+    return structPadInstCond.replace(/REGISTRADOR/g, tempReg).replace("COND", auxExtra).replace("INSTRUCAO", wholeInstruction);
 }
 
-let teste1 = A32ToA64("MOVEQ R0, R1");
+let teste1 = A32ToA64("ADDEQ R0, R1, R2");
 // let teste2 = A32ToA64("MOVLE R1, R1");
 // // let teste3 = A32ToA64("STR R1, [R2, R4]!");
 
@@ -261,7 +264,7 @@ console.log(teste1 + "\n\n");
  ADD R4, R2, R3 
  CSEL R1, R4, R1, EQ
 
- MOV RX, R1
- ADD R1, R2, R3
- CSEL R1, R1, RX, EQ
+
+ ADD RX, R2, R3
+ CSEL R1, RX, R1, EQ
 */
