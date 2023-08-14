@@ -1,33 +1,32 @@
+/* 
+    Vetores e dicionários com as informações de de-para utilizados no código
+*/
+
 let vectorCond = ["EQ", "NE", "CS", "HS", "CC", "LO", "MI", "PL", "VS", "VC", "HI", "LS", "GE", "LT", "GT", "LE", "AL", "S"];
 
-//rever isso, talvez tenha que ver em cada caso
 const shiftCodes = ["LSL", "LSR", "ASR", "ROR"];
 
-const instructions32to64: { [nome: string]: string } = {
-    "ADC": "ADC", //A64 não aceita imediato
+const instructions32to64 : { [nome: string]: string } = {
+    "ADC": "ADC", 
     "ADD": "ADD",
     "AND": "AND",
-    "B": "B",   //B com condição é B.cond no A64
-    "BIC": "BIC", //A64 nao aceita imediato
-    "BL": "BL",
-    "BX": "BR",
+    "B"  : "B",   
+    "BIC": "BIC", 
+    "BL" : "BL",
+    "BX" : "BR",
     "CMN": "CMN",
     "CMP": "CMP",
     "EOR": "EOR",
-    "LDR": "LDR", //registrador do endereco base deve ser X
-    // "LDRB"  :  "LDRB",
-    // "LDRH"  :  "LDRH",
-    // "LDRSB" :  "LDRSB",
-    // "LDRSH" :  "LDRSH",
-    "MLA": "MADD", //tem 4 regs  
-    "MOV": "MOV",  //tem 2 parametro só
+    "LDR": "LDR", 
+    "MLA": "MADD",
+    "MOV": "MOV", 
     "MUL": "MUL",
+    "MRS": "MRS",
+    "MSR": "MSR",
     "MVN": "MVN",
     "ORR": "ORR",
-    "SBC": "SBC", //não aceita imediatos no A64
-    "STR": "STR", //aceita os mesmo formatos do a32 (pos/pre indexado)
-    // "STRB"  :  "STRB",
-    // "STRH"  :  "STRH",
+    "SBC": "SBC", 
+    "STR": "STR", 
     "SUB": "SUB",
     "TST": "TST"
 };
@@ -38,33 +37,32 @@ const partes_e_registradores: { [nome: string]: [number[], number[][], number[]]
     "ADC": [[3], [[1, 1, 1]], [0]], //A64 não aceita imediato
     "ADD": [[3, 3, 5, 5], [[1, 1, 1], [1, 1, 0], [1, 1, 0, 0, 0], [1, 1, 1, 0, 0]], [0, 0, 4, 4]],
     "AND": [[3, 3, 5], [[1, 1, 0], [1, 1, 1], [1, 1, 1, 0, 0]], [0, 0, 4]],
-    "B": [[], [[]], []], //nao será utilizado, uma vez que deve ser com label ou com valores de pc
-    "BIC": [[3, 5], [[1, 1, 1], [1, 1, 1, 0, 0]], [0, 4]], //A64 nao aceita imediato
-    "BL": [[], [[]], []],
-    "BR": [[1], [[1]], [0]], //registrador tem que ser X, ou seja, precisa traduzir para X   
+    "B":   [[],[[]], []],
+    "BIC": [[3, 5], [[1, 1, 1], [1, 1, 1, 0, 0]], [0, 4]], 
+    "BL":  [[],[[]], []],
+    "BR":  [[1], [[1]], [0]],  
     "CMN": [[2, 4, 2, 4], [[1, 1], [1, 1, 0, 0], [1, 0], [1, 0, 0, 0]], [0, 0, 0, 0]],
     "CMP": [[2, 4, 2, 4], [[1, 1], [1, 1, 0, 0], [1, 0], [1, 0, 0, 0]], [0, 0, 0, 0]],
     "EOR": [[3, 5, 3], [[1, 1, 0], [1, 1, 1, 0, 0], [1, 1, 1]], [0, 4, 0]],
     "LDR": [[3, 2, 3, 5], [[1, 1, 0], [1, 0], [1, 1, 1], [1, 1, 1, 0, 0]], [0, 0, 0, 4]],
-    // "LDRB"  :,
-    // "LDRH"  :,
-    // "LDRSB" :,
-    // "LDRSH" :,
-    "MADD": [[4], [[1, 1, 1, 1]], [0]], //tem 4 regs
-    "MOV": [[2, 2], [[1, 0], [1, 1]], [0, 0]],  //tem 2 parametro só
+    "MADD":[[4], [[1, 1, 1, 1]], [0]], 
+    "MOV": [[2, 2], [[1, 0], [1, 1]], [0, 0]],  
     "MUL": [[3], [[1, 1, 1]], [0]],
+    "MRS": [[2], [[0, 1]], [0]],
+    "MSR": [[2], [[1, 0]], [0]],
     "MVN": [[2, 4], [[1, 1], [1, 1, 0, 0]], [0, 3]],
     "ORR": [[3, 5], [[1, 1, 0], [1, 1, 1, 0, 0]], [0, 4]],
-    "SBC": [[3], [[1, 1, 1]], [0]], //não aceita imediatos no A64
-    "STR": [[3, 2, 3, 5], [[1, 1, 0], [1, 0], [1, 1, 1], [1, 1, 1, 0, 0]], [0, 0, 0, 4]], //aceita os mesmo formatos do a32 (pos/pre indexado)
-    // "STRB"  :,
-    // "STRH"  :,
+    "SBC": [[3], [[1, 1, 1]], [0]], 
+    "STR": [[3, 2, 3, 5], [[1, 1, 0], [1, 0], [1, 1, 1], [1, 1, 1, 0, 0]], [0, 0, 0, 4]], 
     "SUB": [[3, 3, 5, 5], [[1, 1, 1], [1, 1, 0], [1, 1, 0, 0, 0], [1, 1, 1, 0, 0]], [0, 0, 4, 4]],
     "TST": [[2, 2, 4], [[1, 0], [1, 1], [1, 1, 0, 0]], [0, 0, 3]]
 };
 
+/*
+Função princial
+*/
 export const A32ToA64 = (inst: string) => {
-    let vectorInst = inst.toUpperCase().split(' ');
+    let vectorInst: string[] = inst.toUpperCase().split(' ');
     const interOut = GetopcodeA64(vectorInst[0]);
 
     if (interOut === null)
@@ -74,7 +72,9 @@ export const A32ToA64 = (inst: string) => {
     let setSignal = interOut[1];
     let auxExtra = interOut[2];
     const nullVector = [0];
+
     let disposicaoRegsShift = verifyRegs(vectorInst, opcodeA64);
+
     if (disposicaoRegsShift === null)
         return "Erro na disposição dos registradores para a tradução para A64";
 
@@ -90,13 +90,13 @@ export const A32ToA64 = (inst: string) => {
                 opcodeA64 = opcodeA64 + "." + auxExtra + " ";
             if (vectorInst.length === 2)
                 return opcodeA64 + " " + vectorInst[1];
-            return "null";
+            return null;
         case "BR":
             if (vectorInst.length === 2 && auxExtra !== "")
                 return instructionCond(opcodeA64 + " " + vectorInst[1], auxExtra)
             else if (vectorInst.length === 2)
                 return opcodeA64 + " " + vectorInst[1]
-            return "null"
+            return null
         case "STR":
         case "LDR": //registrador precisa ser X
             vectorInst[2] = vectorInst[2].replace("R", "X")
@@ -104,10 +104,21 @@ export const A32ToA64 = (inst: string) => {
                 if (vectorInst[4] !== "LSL")
                     return "Operação shift inválida para A64, não é permitido o \"" + vectorInst[4] + "\""
             break;
-        case "CMP":
+        case "MRS":
+            vectorInst[1] = vectorInst[2].replace("R", "X");
+            vectorInst[2] = "NZCV"
             break;
-        case "CMN":
-            break;        //ele utiliza o extend, precisaria mapear e verificar
+        case "MSR":
+            vectorInst[1] = "NZCV"
+            vectorInst[2] = vectorInst[2].replace("R", "X");
+            break;
+        case "ADD":
+        case "SUB":
+            if (disposicaoRegsShift[1] != 0){
+                if(vectorInst[disposicaoRegsShift[1]] === "ROR")
+                    return "Não existe o ROR nessas instruções"
+            }
+            break;
         default:
             break;
     }
@@ -119,6 +130,10 @@ export const A32ToA64 = (inst: string) => {
 
     return wholeInstruction;
 };
+
+/*
+    Funções auxiliares
+*/
 
 const GetopcodeA64 = (opcodeA32: string) => {
 
@@ -169,6 +184,7 @@ const simplifyOpcodeA32 = (opcodeA32: string) => {
 const verifyRegs = (vectorInst: string[], opcodeA64: string) => {
     let arrayInfos: [number[], number] = [[], 0];
     const infos_operandos = partes_e_registradores[opcodeA64];
+    console.log(infos_operandos.length)
 
     if (infos_operandos[0].length === 0)
         return arrayInfos;
@@ -176,9 +192,9 @@ const verifyRegs = (vectorInst: string[], opcodeA64: string) => {
     for (let i = 0; i < infos_operandos[0].length; i++) {
         if (vectorInst.length - 1 === infos_operandos[0][i]) {
             for (let j = 0; j < infos_operandos[0][i]; j++) {
-                if (/R(1[0-5]|[0-9])/.test(vectorInst[j + 1])) {
-                    if (infos_operandos[1][i][j] === 1) {
-                        if (j + 1 === infos_operandos[0][i]) {
+                if (/R(1[0-5]|[0-9])/.test(vectorInst[j + 1])) { 
+                    if(infos_operandos[1][i][j] === 1){
+                        if (j + 1 === infos_operandos[0][i]){
                             arrayInfos = [infos_operandos[1][i], infos_operandos[2][i]]
                             return arrayInfos
                         }
@@ -187,8 +203,8 @@ const verifyRegs = (vectorInst: string[], opcodeA64: string) => {
                         break;
                 }
                 else
-                    if (infos_operandos[1][i][j] === 0) {
-                        if (j + 1 === infos_operandos[0][i]) {
+                    if (infos_operandos[1][i][j] === 0){
+                        if (j + 1 === infos_operandos[0][i]){
                             arrayInfos = [infos_operandos[1][i], infos_operandos[2][i]]
                             return arrayInfos
                         }
@@ -227,3 +243,17 @@ const instructionCond = (wholeInstruction: string, auxExtra: string) => {
     const structPadInstCond = "B.COND branch \nexit: \n\tB exit \nbranch: \n\tINSTRUCAO \n\tB exit\n*essa é uma alternativa, existem outras válidas";
     return structPadInstCond.replace("COND", auxExtra).replace("INSTRUCAO", wholeInstruction)
 }
+
+let teste1 = A32ToA64("BEQ label");
+// let teste2 = A32ToA64("MOVLE R1, R1");
+// // let teste3 = A32ToA64("STR R1, [R2, R4]!");
+
+console.log(teste1 + "\n\n");
+// console.log(teste2 + "\n\n");
+// console.log(teste3);
+
+
+/* Instruçoes que faltam
+ - instrucao de shift como pseudo instrucao (LSL R1, R2, #1 e LSL R1, R2, R3)
+ - instrucoes condicionais (Tipo ADDEQ R1, R2, R3 ficaria: ADD R4, R2, R3 \nCSEL R1, R4, R1, EQ)
+*/
