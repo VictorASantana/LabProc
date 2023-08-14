@@ -112,11 +112,11 @@ export const A32ToA64 = (inst: string) => {
             break;
         case "MRS":
             vectorInst[2] = vectorInst[2].replace("R", "X");
-            vectorInst[1] = "NZCV"
+            vectorInst[1] = "NZCV,"
             break;
         case "MSR":
             vectorInst[2] = "NZCV"
-            vectorInst[1] = vectorInst[1].replace("R", "X");
+            vectorInst[1] = vectorInst[1].replace("R", "X") + ",";
             break;
         case "ADD":
         case "SUB":
