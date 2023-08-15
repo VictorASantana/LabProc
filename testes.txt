@@ -1,0 +1,37 @@
+Lógico aritméticas -------------------------------
+
+AND R0, R1, R2 - thumb não aceita 3 operandos
+AND R0, R0, R2
+
+ADD R0, R0, R1 
+ADD R0, R0, #10
+
+ADD R0, R1, R2, LSL #2 - thumb não aceita shift no operando
+ADD R0, R1, R2, LSL R3 - a64 não aceita reg como qtd de shifts
+
+ADDEQ R0, R1, R2 - Só no A32 tudo é condicional. Explica que no A64 
+                    fizemos pq encontramos uma instrução que ficilita 
+                    essa conversao
+
+Desvio ------------------
+
+B label_name
+BEQ label_name - muda o formato no a64
+
+BX R4
+
+Load-Store ----------------------------
+
+ldr r0, [r1], #4 - thumb não aceita pós indexado
+ldr r0, [r1, r2]
+
+LDMIA R13!, {R1, R3, R15} - a64 não aceita load/store com multiplos regs
+
+Coprocessadores -------------------------
+
+MRC p15, 0, r1, c0, c0, #0 - coprocessadores não existem nos dois
+
+Instruções que leem e modificam o registrador que guarda as flags -----------------
+
+MRS R0, CPSR - não tem essas instruções no thumb
+MSR CPSR, R0 - mas tem no a64 e o cpsr vira NZCV

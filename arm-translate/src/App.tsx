@@ -26,6 +26,7 @@ function App() {
     for (let i = 0; i < t16.length; i++) {
       setOut((prev) => [...prev, ThumbToArm(t16[i]) + "\n"])
     }
+    setARM([])
   }
 
   const translateToARM64 = () => {
