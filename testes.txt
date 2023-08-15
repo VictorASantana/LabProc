@@ -3,7 +3,7 @@ Lógico aritméticas -------------------------------
 AND R0, R1, R2 - thumb não aceita 3 operandos
 AND R0, R0, R2
 
-ADD R0, R0, R1 
+ADD R0, R0, R1
 ADD R0, R0, #10
 
 ADD R0, R1, R2, LSL #2 - thumb não aceita shift no operando
